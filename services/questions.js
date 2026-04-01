@@ -468,6 +468,22 @@ const ALL_QUESTIONS = [
     score_c: 60,
     score_d: 90,
     score_e: null
+  },
+  {
+    id: 30,
+    dimension: 5,
+    dimension_name: "Directed Intelligence Maturity",
+    question_text: "Does your nation have a sovereign AI model development programme with published roadmaps and verifiable milestones?",
+    option_a: "No sovereign AI model development programme exists",
+    option_b: "Initial discussions or exploratory studies only",
+    option_c: "Programme exists but lacks funding or clear milestones",
+    option_d: "Fully funded sovereign AI model programme with published roadmap and verifiable milestones",
+    option_e: null,
+    score_a: 10,
+    score_b: 30,
+    score_c: 60,
+    score_d: 95,
+    score_e: null
   }
 ];
 
