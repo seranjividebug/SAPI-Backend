@@ -3,7 +3,9 @@ const scoringService = require('../services/scoring');
 
 async function submitAssessment(request, reply) {
   try {
-    const { answers } = request.body;
+    console.log('Request body:', request.body);
+    console.log('Request headers:', request.headers);
+    const { answers } = request.body || {};
 
     if (!answers || !Array.isArray(answers) || answers.length === 0) {
       reply.code(400);

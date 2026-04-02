@@ -13,6 +13,16 @@ fastify.register(cors, {
   credentials: true
 });
 
+// Parse text/plain as JSON (for Postman/other clients sending wrong content-type)
+fastify.addContentTypeParser('text/plain', { parseAs: 'string' }, function (req, body, done) {
+  try {
+    const json = JSON.parse(body);
+    done(null, json);
+  } catch (err) {
+    done(err, undefined);
+  }
+});
+
 fastify.register(postgres, {
   connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
   ssl: {
