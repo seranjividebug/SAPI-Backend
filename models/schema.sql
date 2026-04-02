@@ -4,7 +4,19 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. Questions Table
+-- 1. User Profiles Table (Organization/Institution Details)
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    country VARCHAR(100) NOT NULL,
+    respondent_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    ministry_or_department VARCHAR(255) NOT NULL,
+    contact_email VARCHAR(255) NOT NULL,
+    development_stage VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Questions Table
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
     dimension INTEGER NOT NULL,
@@ -23,14 +35,15 @@ CREATE TABLE IF NOT EXISTS questions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Assessments Table
+-- 3. Assessments Table (linked to User Profile)
 CREATE TABLE IF NOT EXISTS assessments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_profile_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Answers Table
+-- 4. Answers Table
 CREATE TABLE IF NOT EXISTS answers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
@@ -40,7 +53,7 @@ CREATE TABLE IF NOT EXISTS answers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Results Table
+-- 5. Results Table
 CREATE TABLE IF NOT EXISTS results (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
@@ -55,6 +68,8 @@ CREATE TABLE IF NOT EXISTS results (
 );
 
 -- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(contact_email);
+CREATE INDEX IF NOT EXISTS idx_assessments_user_profile_id ON assessments(user_profile_id);
 CREATE INDEX IF NOT EXISTS idx_answers_assessment_id ON answers(assessment_id);
 CREATE INDEX IF NOT EXISTS idx_answers_question_id ON answers(question_id);
 CREATE INDEX IF NOT EXISTS idx_results_assessment_id ON results(assessment_id);

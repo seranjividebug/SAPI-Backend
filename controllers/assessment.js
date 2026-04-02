@@ -4,8 +4,7 @@ const scoringService = require('../services/scoring');
 async function submitAssessment(request, reply) {
   try {
     console.log('Request body:', request.body);
-    console.log('Request headers:', request.headers);
-    const { answers } = request.body || {};
+    const { answers, userProfile } = request.body || {};
 
     if (!answers || !Array.isArray(answers) || answers.length === 0) {
       reply.code(400);
@@ -15,8 +14,16 @@ async function submitAssessment(request, reply) {
       };
     }
 
-    // Save assessment and calculate scores
-    const result = await assessmentService.processAssessment(request.server.pg, answers);
+    if (!userProfile || !userProfile.country || !userProfile.respondent_name || !userProfile.contact_email) {
+      reply.code(400);
+      return {
+        success: false,
+        error: 'User profile with country, respondent_name, and contact_email is required'
+      };
+    }
+
+    // Save assessment with user profile and calculate scores
+    const result = await assessmentService.processAssessment(request.server.pg, answers, userProfile);
 
     return {
       success: true,

@@ -2,17 +2,33 @@ const { v4: uuidv4 } = require('uuid');
 const scoringService = require('./scoring');
 const questionsService = require('./questions');
 
-async function processAssessment(pg, answers) {
+async function processAssessment(pg, answers, userProfile) {
   const client = await pg.connect();
   
   try {
     await client.query('BEGIN');
     
-    // Create assessment
+    // Create user profile first
+    const profileId = uuidv4();
+    await client.query(
+      `INSERT INTO user_profiles (id, country, respondent_name, title, ministry_or_department, contact_email, development_stage) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        profileId,
+        userProfile.country,
+        userProfile.respondent_name,
+        userProfile.title || '',
+        userProfile.ministry_or_department || '',
+        userProfile.contact_email,
+        userProfile.development_stage || ''
+      ]
+    );
+    
+    // Create assessment linked to user profile
     const assessmentId = uuidv4();
-    const assessmentResult = await client.query(
-      'INSERT INTO assessments (id, created_at) VALUES ($1, NOW()) RETURNING id, created_at',
-      [assessmentId]
+    await client.query(
+      'INSERT INTO assessments (id, user_profile_id, created_at) VALUES ($1, $2, NOW()) RETURNING id, created_at',
+      [assessmentId, profileId]
     );
     
     // Store answers and calculate scores
@@ -86,6 +102,8 @@ async function processAssessment(pg, answers) {
     
     return {
       assessment_id: assessmentId,
+      profile_id: profileId,
+      user_profile: userProfile,
       compute_capacity: dimensionScores[1],
       capital_formation: dimensionScores[2],
       regulatory_readiness: dimensionScores[3],
@@ -113,9 +131,17 @@ async function getResults(pg, assessmentId) {
       r.directed_intelligence,
       r.sapi_score,
       r.sapi_tier as tier,
-      a.created_at
+      a.created_at,
+      a.user_profile_id,
+      up.country,
+      up.respondent_name,
+      up.title,
+      up.ministry_or_department,
+      up.contact_email,
+      up.development_stage
     FROM results r
     JOIN assessments a ON r.assessment_id = a.id
+    LEFT JOIN user_profiles up ON a.user_profile_id = up.id
     WHERE r.assessment_id = $1`,
     [assessmentId]
   );
