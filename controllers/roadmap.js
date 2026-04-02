@@ -2,17 +2,17 @@ const roadmapService = require('../services/roadmap');
 
 async function generateRoadmap(request, reply) {
   try {
-    const { dimensionScores } = request.body;
+    const { dimensionScores, sapiScore } = request.body;
 
-    if (!dimensionScores) {
+    if (!dimensionScores || sapiScore === undefined) {
       reply.code(400);
       return {
         success: false,
-        error: 'Dimension scores are required'
+        error: 'Dimension scores and SAPI score are required'
       };
     }
 
-    const roadmap = roadmapService.generateRoadmap(dimensionScores);
+    const roadmap = roadmapService.generateRoadmap(dimensionScores, sapiScore);
 
     return {
       success: true,
