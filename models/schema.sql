@@ -4,7 +4,18 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. User Profiles Table (Organization/Institution Details)
+-- 1. Users Table (Authentication)
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role INTEGER NOT NULL DEFAULT 2, -- 1 = admin, 2 = user
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. User Profiles Table (Organization/Institution Details)
 CREATE TABLE IF NOT EXISTS user_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     country VARCHAR(100) NOT NULL,
@@ -16,7 +27,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Questions Table
+-- 3. Questions Table
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
     dimension INTEGER NOT NULL,
@@ -35,7 +46,7 @@ CREATE TABLE IF NOT EXISTS questions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Assessments Table (linked to User Profile)
+-- 5. Assessments Table (linked to User Profile)
 CREATE TABLE IF NOT EXISTS assessments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_profile_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
@@ -43,7 +54,7 @@ CREATE TABLE IF NOT EXISTS assessments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Answers Table
+-- 6. Answers Table
 CREATE TABLE IF NOT EXISTS answers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
@@ -53,7 +64,7 @@ CREATE TABLE IF NOT EXISTS answers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Results Table
+-- 7. Results Table
 CREATE TABLE IF NOT EXISTS results (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
@@ -68,6 +79,7 @@ CREATE TABLE IF NOT EXISTS results (
 );
 
 -- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(contact_email);
 CREATE INDEX IF NOT EXISTS idx_assessments_user_profile_id ON assessments(user_profile_id);
 CREATE INDEX IF NOT EXISTS idx_answers_assessment_id ON answers(assessment_id);
@@ -83,6 +95,12 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_assessments_updated_at ON assessments;
 CREATE TRIGGER update_assessments_updated_at
