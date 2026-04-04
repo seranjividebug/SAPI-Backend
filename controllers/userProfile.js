@@ -37,20 +37,6 @@ async function createProfile(request, reply) {
     const client = await request.server.pg.connect();
     
     try {
-      // Check if user already has a profile
-      const existingProfile = await client.query(
-        'SELECT id FROM user_profiles WHERE user_id = $1',
-        [userId]
-      );
-
-      if (existingProfile.rows.length > 0) {
-        reply.code(409);
-        return {
-          success: false,
-          error: 'User already has a profile. Use PUT to update existing profile.'
-        };
-      }
-
       // Create user profile linked to user
       const profileId = uuidv4();
       const result = await client.query(
