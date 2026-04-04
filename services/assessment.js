@@ -2,29 +2,23 @@ const { v4: uuidv4 } = require('uuid');
 const scoringService = require('./scoring');
 const questionsService = require('./questions');
 
-async function processAssessment(pg, answers, userProfile) {
+async function processAssessment(pg, answers, profileId) {
   const client = await pg.connect();
   
   try {
     await client.query('BEGIN');
     
-    // Create user profile first
-    const profileId = uuidv4();
-    await client.query(
-      `INSERT INTO user_profiles (id, country, respondent_name, title, ministry_or_department, contact_email, development_stage) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        profileId,
-        userProfile.country,
-        userProfile.respondent_name,
-        userProfile.title || '',
-        userProfile.ministry_or_department || '',
-        userProfile.contact_email,
-        userProfile.development_stage || ''
-      ]
+    // Verify profile exists
+    const profileCheck = await client.query(
+      'SELECT id FROM user_profiles WHERE id = $1',
+      [profileId]
     );
     
-    // Create assessment linked to user profile
+    if (profileCheck.rows.length === 0) {
+      throw new Error(`Profile with id ${profileId} not found. Create a profile first using POST /api/profile`);
+    }
+    
+    // Create assessment linked to existing user profile
     const assessmentId = uuidv4();
     await client.query(
       'INSERT INTO assessments (id, user_profile_id, created_at) VALUES ($1, $2, NOW()) RETURNING id, created_at',
@@ -103,7 +97,6 @@ async function processAssessment(pg, answers, userProfile) {
     return {
       assessment_id: assessmentId,
       profile_id: profileId,
-      user_profile: userProfile,
       compute_capacity: dimensionScores[1],
       capital_formation: dimensionScores[2],
       regulatory_readiness: dimensionScores[3],

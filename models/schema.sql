@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- 2. User Profiles Table (Organization/Institution Details)
 CREATE TABLE IF NOT EXISTS user_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     country VARCHAR(100) NOT NULL,
     respondent_name VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -80,6 +81,7 @@ CREATE TABLE IF NOT EXISTS results (
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(contact_email);
 CREATE INDEX IF NOT EXISTS idx_assessments_user_profile_id ON assessments(user_profile_id);
 CREATE INDEX IF NOT EXISTS idx_answers_assessment_id ON answers(assessment_id);

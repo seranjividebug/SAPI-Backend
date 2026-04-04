@@ -32,6 +32,7 @@ fastify.register(postgres, {
 
 // Register routes
 fastify.register(require('./routes/auth'), { prefix: '/api/auth' });
+fastify.register(require('./routes/userProfile'), { prefix: '/api/profile' });
 fastify.register(require('./routes/questions'), { prefix: '/api/questions' });
 fastify.register(require('./routes/assessment'), { prefix: '/api/assessment' });
 fastify.register(require('./routes/roadmap'), { prefix: '/api/roadmap' });
