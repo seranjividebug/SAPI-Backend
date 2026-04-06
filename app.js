@@ -5,11 +5,7 @@ require('dotenv').config();
 
 // Register plugins
 fastify.register(cors, {
-  origin: [
-    'http://localhost:3000',
-    'https://sapi-livid.vercel.app/',
-    /\.vercel\.app$/
-  ],
+  origin: true,
   credentials: true
 });
 
