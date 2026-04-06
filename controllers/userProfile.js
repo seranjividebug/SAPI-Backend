@@ -40,7 +40,7 @@ async function createProfile(request, reply) {
       // Create user profile linked to user
       const profileId = uuidv4();
       const result = await client.query(
-        `INSERT INTO user_profiles (id, user_id, country, respondent_name, title, ministry_or_department, contact_email, development_stage) 
+        `INSERT INTO sapi.user_profiles (id, user_id, country, respondent_name, title, ministry_or_department, contact_email, development_stage) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING id, country, respondent_name, title, ministry_or_department, contact_email, development_stage, created_at`,
         [
@@ -94,7 +94,7 @@ async function getProfile(request, reply) {
     try {
       const result = await client.query(
         `SELECT id, user_id, country, respondent_name, title, ministry_or_department, contact_email, development_stage, created_at
-         FROM user_profiles 
+         FROM sapi.user_profiles 
          WHERE id = $1`,
         [id]
       );
@@ -143,7 +143,7 @@ async function getAllProfiles(request, reply) {
     try {
       const result = await client.query(
         `SELECT id, user_id, country, respondent_name, title, ministry_or_department, contact_email, development_stage, created_at
-         FROM user_profiles 
+         FROM sapi.user_profiles 
          ORDER BY created_at DESC`
       );
 
@@ -209,7 +209,7 @@ async function updateProfile(request, reply) {
     try {
       // Check if profile exists and belongs to user
       const existingProfile = await client.query(
-        'SELECT id, user_id FROM user_profiles WHERE id = $1',
+        'SELECT id, user_id FROM sapi.user_profiles WHERE id = $1',
         [id]
       );
 

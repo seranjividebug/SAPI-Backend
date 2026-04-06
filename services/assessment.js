@@ -10,7 +10,7 @@ async function processAssessment(pg, answers, profileId) {
     
     // Verify profile exists
     const profileCheck = await client.query(
-      'SELECT id FROM user_profiles WHERE id = $1',
+      'SELECT id FROM sapi.user_profiles WHERE id = $1',
       [profileId]
     );
     
@@ -21,7 +21,7 @@ async function processAssessment(pg, answers, profileId) {
     // Create assessment linked to existing user profile
     const assessmentId = uuidv4();
     await client.query(
-      'INSERT INTO assessments (id, user_profile_id, created_at) VALUES ($1, $2, NOW()) RETURNING id, created_at',
+      'INSERT INTO sapi.assessments (id, user_profile_id, created_at) VALUES ($1, $2, NOW()) RETURNING id, created_at',
       [assessmentId, profileId]
     );
     
@@ -50,7 +50,7 @@ async function processAssessment(pg, answers, profileId) {
       }
       
       await client.query(
-        'INSERT INTO answers (id, assessment_id, question_id, selected_option, score) VALUES ($1, $2, $3, $4, $5)',
+        'INSERT INTO sapi.answers (id, assessment_id, question_id, selected_option, score) VALUES ($1, $2, $3, $4, $5)',
         [uuidv4(), assessmentId, answer.question_id, answer.selected_option, score]
       );
       
@@ -75,7 +75,7 @@ async function processAssessment(pg, answers, profileId) {
     
     // Store results
     await client.query(
-      `INSERT INTO results (
+      `INSERT INTO sapi.results (
         id, assessment_id, compute_capacity, capital_formation, regulatory_readiness, 
         data_sovereignty, directed_intelligence, sapi_score, sapi_tier
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
@@ -132,9 +132,9 @@ async function getResults(pg, assessmentId) {
       up.ministry_or_department,
       up.contact_email,
       up.development_stage
-    FROM results r
-    JOIN assessments a ON r.assessment_id = a.id
-    LEFT JOIN user_profiles up ON a.user_profile_id = up.id
+    FROM sapi.results r
+    JOIN sapi.assessments a ON r.assessment_id = a.id
+    LEFT JOIN sapi.user_profiles up ON a.user_profile_id = up.id
     WHERE r.assessment_id = $1`,
     [assessmentId]
   );

@@ -56,7 +56,7 @@ async function register(request, reply) {
     try {
       // Check if email already exists
       const existingUser = await client.query(
-        'SELECT id FROM users WHERE email = $1',
+        'SELECT id FROM sapi.users WHERE email = $1',
         [email.toLowerCase()]
       );
 
@@ -74,7 +74,7 @@ async function register(request, reply) {
       // Create user with role 2 (user) - only user registration allowed
       const userId = uuidv4();
       const result = await client.query(
-        `INSERT INTO users (id, full_name, email, password_hash, role) 
+        `INSERT INTO sapi.users (id, full_name, email, password_hash, role) 
          VALUES ($1, $2, $3, $4, $5) 
          RETURNING id, full_name, email, role, created_at`,
         [userId, full_name, email.toLowerCase(), passwordHash, ROLES.USER]
@@ -140,7 +140,7 @@ async function login(request, reply) {
       // Find user by email
       const result = await client.query(
         `SELECT id, full_name, email, password_hash, role, created_at 
-         FROM users 
+         FROM sapi.users 
          WHERE email = $1`,
         [email.toLowerCase()]
       );

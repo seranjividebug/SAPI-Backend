@@ -11,7 +11,7 @@ async function getDashboardStats(pg) {
         COUNT(CASE WHEN a.created_at >= DATE_TRUNC('month', CURRENT_DATE) THEN 1 END) as current_month,
         COUNT(CASE WHEN a.created_at >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') 
                    AND a.created_at < DATE_TRUNC('month', CURRENT_DATE) THEN 1 END) as last_month
-      FROM assessments a
+      FROM sapi.assessments a
     `);
 
     // Average SAPI score
@@ -20,8 +20,8 @@ async function getDashboardStats(pg) {
         ROUND(AVG(sapi_score)::numeric, 1) as avg_score,
         COUNT(*) FILTER (WHERE a.created_at >= DATE_TRUNC('month', CURRENT_DATE)) as current_month_count,
         ROUND(AVG(sapi_score) FILTER (WHERE a.created_at >= DATE_TRUNC('month', CURRENT_DATE))::numeric, 1) as current_month_avg
-      FROM results r
-      JOIN assessments a ON r.assessment_id = a.id
+      FROM sapi.results r
+      JOIN sapi.assessments a ON r.assessment_id = a.id
     `);
 
     // Completion rate (assessments with results vs total)
@@ -31,8 +31,8 @@ async function getDashboardStats(pg) {
           (COUNT(DISTINCT r.assessment_id)::numeric / NULLIF(COUNT(DISTINCT a.id), 0)::numeric) * 100, 
           0
         ) as completion_rate
-      FROM assessments a
-      LEFT JOIN results r ON a.id = r.assessment_id
+      FROM sapi.assessments a
+      LEFT JOIN sapi.results r ON a.id = r.assessment_id
     `);
 
     // Tier distribution for donut chart
@@ -40,8 +40,8 @@ async function getDashboardStats(pg) {
       SELECT 
         sapi_tier as tier,
         COUNT(*) as count,
-        ROUND(COUNT(*)::numeric / (SELECT COUNT(*) FROM results)::numeric * 100, 0) as percentage
-      FROM results
+        ROUND(COUNT(*)::numeric / (SELECT COUNT(*) FROM sapi.results)::numeric * 100, 0) as percentage
+      FROM sapi.results
       GROUP BY sapi_tier
     `);
 
@@ -50,9 +50,9 @@ async function getDashboardStats(pg) {
       SELECT 
         up.country,
         ROUND(AVG(r.sapi_score)::numeric, 1) as avg_score
-      FROM user_profiles up
-      JOIN assessments a ON up.id = a.user_profile_id
-      JOIN results r ON a.id = r.assessment_id
+            FROM sapi.user_profiles up
+      JOIN sapi.assessments a ON up.id = a.user_profile_id
+      JOIN sapi.results r ON a.id = r.assessment_id
       GROUP BY up.country
       ORDER BY avg_score DESC
       LIMIT 5
@@ -178,9 +178,9 @@ async function getAssessmentsList(pg, filters = {}) {
     // Get total count
     const countQuery = await client.query(`
       SELECT COUNT(*) as total
-      FROM assessments a
-      JOIN user_profiles up ON a.user_profile_id = up.id
-      JOIN results r ON a.id = r.assessment_id
+      FROM sapi.assessments a
+      JOIN sapi.user_profiles up ON a.user_profile_id = up.id
+      JOIN sapi.results r ON a.id = r.assessment_id
       ${whereClause}
     `, params);
 
@@ -204,9 +204,9 @@ async function getAssessmentsList(pg, filters = {}) {
         r.regulatory_readiness,
         r.data_sovereignty,
         r.directed_intelligence
-      FROM assessments a
-      JOIN user_profiles up ON a.user_profile_id = up.id
-      JOIN results r ON a.id = r.assessment_id
+      FROM sapi.assessments a
+      JOIN sapi.user_profiles up ON a.user_profile_id = up.id
+      JOIN sapi.results r ON a.id = r.assessment_id
       ${whereClause}
       ORDER BY a.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -247,7 +247,7 @@ async function getFilterOptions(pg) {
     // Get unique countries
     const countriesQuery = await client.query(`
       SELECT DISTINCT country 
-      FROM user_profiles 
+      FROM sapi.user_profiles 
       WHERE country IS NOT NULL 
       ORDER BY country
     `);
