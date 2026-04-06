@@ -22,7 +22,8 @@ async function getAssessments(request, reply) {
   try {
     const { 
       search, 
-      country, 
+      country,
+      development_stage, 
       score_min, 
       score_max, 
       tier,
@@ -35,6 +36,7 @@ async function getAssessments(request, reply) {
     const filters = {
       search,
       country,
+      developmentStage: development_stage,
       scoreMin: score_min ? parseFloat(score_min) : undefined,
       scoreMax: score_max ? parseFloat(score_max) : undefined,
       tier,
@@ -85,6 +87,7 @@ async function exportAssessments(request, reply) {
     const filters = {
       search: request.query.search,
       country: request.query.country,
+      developmentStage: request.query.development_stage,
       scoreMin: request.query.score_min ? parseFloat(request.query.score_min) : undefined,
       scoreMax: request.query.score_max ? parseFloat(request.query.score_max) : undefined,
       tier: request.query.tier,

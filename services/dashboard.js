@@ -99,6 +99,7 @@ async function getAssessmentsList(pg, filters = {}) {
     const { 
       search, 
       country, 
+      developmentStage,
       scoreMin, 
       scoreMax, 
       tier,
@@ -127,6 +128,13 @@ async function getAssessmentsList(pg, filters = {}) {
     if (country && country !== 'all') {
       whereConditions.push(`up.country = $${paramIndex}`);
       params.push(country);
+      paramIndex++;
+    }
+
+    // Development stage filter
+    if (developmentStage && developmentStage !== 'all') {
+      whereConditions.push(`up.development_stage = $${paramIndex}`);
+      params.push(developmentStage);
       paramIndex++;
     }
 
@@ -187,6 +195,7 @@ async function getAssessmentsList(pg, filters = {}) {
         up.respondent_name,
         up.title,
         up.ministry_or_department,
+        up.development_stage,
         r.sapi_score as score,
         r.sapi_tier as tier,
         a.created_at as date,
@@ -214,6 +223,7 @@ async function getAssessmentsList(pg, filters = {}) {
         respondentName: row.respondent_name,
         title: row.title,
         ministry: row.ministry_or_department,
+        developmentStage: row.development_stage,
         score: parseFloat(row.score),
         tier: row.tier,
         date: row.date,
@@ -257,13 +267,22 @@ async function getFilterOptions(pg) {
       ORDER BY sapi_tier
     `);
 
+    // Get unique development stages
+    const devStagesQuery = await client.query(`
+      SELECT DISTINCT development_stage
+      FROM user_profiles
+      WHERE development_stage IS NOT NULL
+      ORDER BY development_stage
+    `);
+
     return {
       countries: countriesQuery.rows.map(r => r.country),
       scoreRange: {
         min: Math.floor(parseFloat(scoreRangeQuery.rows[0].min_score) || 0),
         max: Math.ceil(parseFloat(scoreRangeQuery.rows[0].max_score) || 100)
       },
-      tiers: tiersQuery.rows.map(r => r.tier)
+      tiers: tiersQuery.rows.map(r => r.tier),
+      developmentStages: devStagesQuery.rows.map(r => r.development_stage)
     };
   } finally {
     client.release();
