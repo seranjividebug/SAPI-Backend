@@ -108,6 +108,22 @@ async function register(request, reply) {
 
       const user = result.rows[0];
 
+      // Format created_at as UK time
+      const date = new Date(user.created_at);
+      const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const parts = ukFormatter.formatToParts(date);
+      const getPart = (type) => parts.find(p => p.type === type)?.value;
+      const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+
       // Generate JWT token
       const token = jwt.sign(
         { 
@@ -129,7 +145,7 @@ async function register(request, reply) {
             email: user.email,
             role: user.role,
             role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
-            created_at: user.created_at
+            created_at: createdAtUK
           },
           token
         }
@@ -199,6 +215,22 @@ async function login(request, reply) {
         };
       }
 
+      // Format created_at as UK time
+      const date = new Date(user.created_at);
+      const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const parts = ukFormatter.formatToParts(date);
+      const getPart = (type) => parts.find(p => p.type === type)?.value;
+      const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+
       // Generate JWT token
       const token = jwt.sign(
         { 
@@ -220,7 +252,7 @@ async function login(request, reply) {
             email: user.email,
             role: user.role,
             role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
-            created_at: user.created_at
+            created_at: createdAtUK
           },
           token
         }
@@ -325,6 +357,238 @@ async function getUsers(request, reply) {
   }
 }
 
+// Get user by ID
+async function getUserById(request, reply) {
+  try {
+    const { id } = request.params;
+    
+    const client = await request.server.pg.connect();
+    
+    try {
+      const result = await client.query(
+        `SELECT id, full_name, email, role, created_at 
+         FROM sapi.users 
+         WHERE id = $1`,
+        [id]
+      );
+      
+      if (result.rows.length === 0) {
+        reply.code(404);
+        return {
+          success: false,
+          error: 'User not found'
+        };
+      }
+      
+      const user = result.rows[0];
+      
+      // Format created_at as UK time
+      const date = new Date(user.created_at);
+      const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const parts = ukFormatter.formatToParts(date);
+      const getPart = (type) => parts.find(p => p.type === type)?.value;
+      const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+      
+      return {
+        success: true,
+        data: {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+          role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
+          created_at: createdAtUK
+        }
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// Update user
+async function updateUser(request, reply) {
+  try {
+    const { id } = request.params;
+    const { full_name, email, role } = request.body || {};
+    
+    if (!full_name && !email && role === undefined) {
+      reply.code(400);
+      return {
+        success: false,
+        error: 'At least one field required: full_name, email, or role'
+      };
+    }
+    
+    const client = await request.server.pg.connect();
+    
+    try {
+      // Check if user exists
+      const existingUser = await client.query(
+        'SELECT id FROM sapi.users WHERE id = $1',
+        [id]
+      );
+      
+      if (existingUser.rows.length === 0) {
+        reply.code(404);
+        return {
+          success: false,
+          error: 'User not found'
+        };
+      }
+      
+      // Build update query dynamically
+      const updates = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      if (full_name) {
+        updates.push(`full_name = $${paramIndex++}`);
+        values.push(full_name);
+      }
+      
+      if (email) {
+        // Check if email already exists for another user
+        const emailCheck = await client.query(
+          'SELECT id FROM sapi.users WHERE email = $1 AND id != $2',
+          [email.toLowerCase(), id]
+        );
+        
+        if (emailCheck.rows.length > 0) {
+          reply.code(409);
+          return {
+            success: false,
+            error: 'Email already registered by another user'
+          };
+        }
+        
+        updates.push(`email = $${paramIndex++}`);
+        values.push(email.toLowerCase());
+      }
+      
+      if (role !== undefined) {
+        updates.push(`role = $${paramIndex++}`);
+        values.push(parseInt(role));
+      }
+      
+      values.push(id);
+      
+      const result = await client.query(
+        `UPDATE sapi.users 
+         SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $${paramIndex}
+         RETURNING id, full_name, email, role, created_at, updated_at`,
+        values
+      );
+      
+      const user = result.rows[0];
+      
+      // Format dates as UK time
+      const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      const createdParts = ukFormatter.formatToParts(new Date(user.created_at));
+      const updatedParts = ukFormatter.formatToParts(new Date(user.updated_at));
+      const getPart = (parts, type) => parts.find(p => p.type === type)?.value;
+      
+      const createdAtUK = `${getPart(createdParts, 'day')}/${getPart(createdParts, 'month')}/${getPart(createdParts, 'year')} ${getPart(createdParts, 'hour')}:${getPart(createdParts, 'minute')}:${getPart(createdParts, 'second')}`;
+      const updatedAtUK = `${getPart(updatedParts, 'day')}/${getPart(updatedParts, 'month')}/${getPart(updatedParts, 'year')} ${getPart(updatedParts, 'hour')}:${getPart(updatedParts, 'minute')}:${getPart(updatedParts, 'second')}`;
+      
+      return {
+        success: true,
+        message: 'User updated successfully',
+        data: {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+          role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
+          created_at: createdAtUK,
+          updated_at: updatedAtUK
+        }
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// Delete user
+async function deleteUser(request, reply) {
+  try {
+    const { id } = request.params;
+    
+    const client = await request.server.pg.connect();
+    
+    try {
+      // Check if user exists
+      const existingUser = await client.query(
+        'SELECT id FROM sapi.users WHERE id = $1',
+        [id]
+      );
+      
+      if (existingUser.rows.length === 0) {
+        reply.code(404);
+        return {
+          success: false,
+          error: 'User not found'
+        };
+      }
+      
+      // Delete user
+      await client.query(
+        'DELETE FROM sapi.users WHERE id = $1',
+        [id]
+      );
+      
+      return {
+        success: true,
+        message: 'User deleted successfully'
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
 // Middleware to verify JWT token
 async function verifyToken(request, reply) {
   try {
@@ -373,6 +637,9 @@ module.exports = {
   register,
   login,
   getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
   verifyToken,
   requireAdmin,
   ROLES
