@@ -132,35 +132,82 @@ async function processAssessment(pg, answers, profileId) {
 }
 
 async function getResults(pg, assessmentId) {
-  const result = await pg.query(
-    `SELECT 
-      r.compute_capacity,
-      r.capital_formation,
-      r.regulatory_readiness,
-      r.data_sovereignty,
-      r.directed_intelligence,
-      r.sapi_score,
-      r.sapi_tier as tier,
-      a.created_at,
-      a.user_profile_id,
-      up.country,
-      up.respondent_name,
-      up.title,
-      up.ministry_or_department,
-      up.contact_email,
-      up.development_stage
-    FROM sapi.results r
-    JOIN sapi.assessments a ON r.assessment_id = a.id
-    LEFT JOIN sapi.user_profiles up ON a.user_profile_id = up.id
-    WHERE r.assessment_id = $1`,
-    [assessmentId]
-  );
+  const client = await pg.connect();
   
-  if (result.rows.length === 0) {
-    return null;
+  try {
+    // Get main results with profile info
+    const result = await client.query(
+      `SELECT 
+        r.compute_capacity,
+        r.capital_formation,
+        r.regulatory_readiness,
+        r.data_sovereignty,
+        r.directed_intelligence,
+        r.sapi_score,
+        r.sapi_tier as tier,
+        a.created_at,
+        a.user_profile_id,
+        up.country,
+        up.respondent_name,
+        up.title,
+        up.ministry_or_department,
+        up.contact_email,
+        up.development_stage
+      FROM sapi.results r
+      JOIN sapi.assessments a ON r.assessment_id = a.id
+      LEFT JOIN sapi.user_profiles up ON a.user_profile_id = up.id
+      WHERE r.assessment_id = $1`,
+      [assessmentId]
+    );
+    
+    if (result.rows.length === 0) {
+      return null;
+    }
+    
+    const results = result.rows[0];
+    
+    // Get all answers with question details for sub-indicators
+    const answersResult = await client.query(
+      `SELECT 
+        ans.question_id,
+        ans.selected_option,
+        ans.score,
+        q.dimension,
+        q.dimension_name,
+        q.question_text
+      FROM sapi.answers ans
+      JOIN sapi.questions q ON ans.question_id = q.id
+      WHERE ans.assessment_id = $1
+      ORDER BY q.dimension, q.id`,
+      [assessmentId]
+    );
+    
+    // Group answers by dimension for sub-indicators
+    const dimensionBreakdown = {};
+    answersResult.rows.forEach(row => {
+      if (!dimensionBreakdown[row.dimension]) {
+        dimensionBreakdown[row.dimension] = {
+          dimension_id: row.dimension,
+          dimension_name: row.dimension_name,
+          sub_indicators: []
+        };
+      }
+      
+      dimensionBreakdown[row.dimension].sub_indicators.push({
+        question_id: row.question_id,
+        question_text: row.question_text,
+        selected_option: row.selected_option.toUpperCase(),
+        score: row.score
+      });
+    });
+    
+    return {
+      ...results,
+      dimension_sub_indicators: Object.values(dimensionBreakdown)
+    };
+  } finally {
+    client.release();
   }
-  
-  return result.rows[0];
 }
 
 async function getAssessmentDetails(pg, assessmentId) {
