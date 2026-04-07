@@ -217,24 +217,42 @@ async function getAssessmentsList(pg, filters = {}) {
       page: parseInt(page),
       limit: parseInt(limit),
       totalPages: Math.ceil(parseInt(countQuery.rows[0].total) / limit),
-      data: assessmentsQuery.rows.map(row => ({
-        id: row.assessment_id,
-        country: row.country,
-        respondentName: row.respondent_name,
-        title: row.title,
-        ministry: row.ministry_or_department,
-        developmentStage: row.development_stage,
-        score: parseFloat(row.score),
-        tier: row.tier,
-        date: row.date,
-        dimensionScores: {
-          computeCapacity: parseFloat(row.compute_capacity),
-          capitalFormation: parseFloat(row.capital_formation),
-          regulatoryReadiness: parseFloat(row.regulatory_readiness),
-          dataSovereignty: parseFloat(row.data_sovereignty),
-          directedIntelligence: parseFloat(row.directed_intelligence)
-        }
-      }))
+      data: assessmentsQuery.rows.map(row => {
+        // Format date as UK time
+        const date = new Date(row.date);
+        const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/London',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        const parts = ukFormatter.formatToParts(date);
+        const getPart = (type) => parts.find(p => p.type === type)?.value;
+        const dateUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+        
+        return {
+          id: row.assessment_id,
+          country: row.country,
+          respondentName: row.respondent_name,
+          title: row.title,
+          ministry: row.ministry_or_department,
+          developmentStage: row.development_stage,
+          score: parseFloat(row.score),
+          tier: row.tier,
+          date: dateUK,
+          dimensionScores: {
+            computeCapacity: parseFloat(row.compute_capacity),
+            capitalFormation: parseFloat(row.capital_formation),
+            regulatoryReadiness: parseFloat(row.regulatory_readiness),
+            dataSovereignty: parseFloat(row.data_sovereignty),
+            directedIntelligence: parseFloat(row.directed_intelligence)
+          }
+        };
+      })
     };
   } finally {
     client.release();
