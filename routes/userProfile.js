@@ -2,8 +2,8 @@ const userProfile = require('../controllers/userProfile');
 const auth = require('../controllers/auth');
 
 async function routes(fastify, options) {
-  // Create user profile (POST) - requires authentication
-  fastify.post('/', { preHandler: auth.verifyToken }, userProfile.createProfile);
+  // Create user profile (POST) - public, no authentication required
+  fastify.post('/', userProfile.createProfile);
   
   // Update user profile (PUT) - requires authentication
   fastify.put('/:id', { preHandler: auth.verifyToken }, userProfile.updateProfile);
