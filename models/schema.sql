@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS answers (
 -- 7. Results Table
 CREATE TABLE IF NOT EXISTS results (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+    assessment_id UUID NOT NULL UNIQUE REFERENCES assessments(id) ON DELETE CASCADE,
     compute_capacity DECIMAL(5,2) NOT NULL,
     capital_formation DECIMAL(5,2) NOT NULL,
     regulatory_readiness DECIMAL(5,2) NOT NULL,

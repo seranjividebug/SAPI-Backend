@@ -20,9 +20,10 @@ async function processAssessment(pg, answers, profileId) {
     
     // Create assessment linked to existing user profile
     const assessmentId = uuidv4();
+    const now = new Date(); // Use local server time
     await client.query(
-      'INSERT INTO sapi.assessments (id, user_profile_id, created_at) VALUES ($1, $2, NOW()) RETURNING id, created_at',
-      [assessmentId, profileId]
+      'INSERT INTO sapi.assessments (id, user_profile_id, created_at) VALUES ($1, $2, $3)',
+      [assessmentId, profileId, now.toISOString()]
     );
     
     // Store answers and calculate scores
@@ -94,9 +95,25 @@ async function processAssessment(pg, answers, profileId) {
     
     await client.query('COMMIT');
     
+    // Format created_at as UK time using local server time
+    const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const parts = ukFormatter.formatToParts(now);
+    const getPart = (type) => parts.find(p => p.type === type)?.value;
+    const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+    
     return {
       assessment_id: assessmentId,
       profile_id: profileId,
+      created_at: createdAtUK,
       compute_capacity: dimensionScores[1],
       capital_formation: dimensionScores[2],
       regulatory_readiness: dimensionScores[3],
