@@ -8,36 +8,25 @@ const JWT_EXPIRES_IN = '24h';
 
 // Role constants
 const ROLES = {
-  ADMIN: 1,
+  ADMIN: 1,       // Admin and Super Admin both use role 1
   USER: 2
 };
 
+// Generate admin password - fixed value for Admin and SuperAdmin
+function generateAdminPassword() {
+  return 'Admin@123';
+}
+
 async function register(request, reply) {
   try {
-    const { full_name, email, password, confirm_password } = request.body || {};
+    const { full_name, email, password, confirm_password, role } = request.body || {};
 
     // Validation
-    if (!full_name || !email || !password || !confirm_password) {
+    if (!full_name || !email) {
       reply.code(400);
       return {
         success: false,
-        error: 'All fields are required: full_name, email, password, confirm_password'
-      };
-    }
-
-    if (password !== confirm_password) {
-      reply.code(400);
-      return {
-        success: false,
-        error: 'Passwords do not match'
-      };
-    }
-
-    if (password.length < 6) {
-      reply.code(400);
-      return {
-        success: false,
-        error: 'Password must be at least 6 characters long'
+        error: 'Full name and email are required'
       };
     }
 
@@ -49,6 +38,43 @@ async function register(request, reply) {
         success: false,
         error: 'Invalid email format'
       };
+    }
+
+    // Determine role (default to USER if not specified)
+    const userRole = role && parseInt(role) === ROLES.ADMIN ? ROLES.ADMIN : ROLES.USER;
+    
+    let finalPassword;
+    
+    // For Admin/SuperAdmin (role 1): auto-generate password
+    if (userRole === ROLES.ADMIN) {
+      finalPassword = generateAdminPassword();
+    } else {
+      // For regular users: require password from request
+      if (!password || !confirm_password) {
+        reply.code(400);
+        return {
+          success: false,
+          error: 'Password and confirm_password are required for user registration'
+        };
+      }
+
+      if (password !== confirm_password) {
+        reply.code(400);
+        return {
+          success: false,
+          error: 'Passwords do not match'
+        };
+      }
+
+      if (password.length < 6) {
+        reply.code(400);
+        return {
+          success: false,
+          error: 'Password must be at least 6 characters long'
+        };
+      }
+      
+      finalPassword = password;
     }
 
     const client = await request.server.pg.connect();
@@ -69,15 +95,15 @@ async function register(request, reply) {
       }
 
       // Hash password
-      const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+      const passwordHash = await bcrypt.hash(finalPassword, SALT_ROUNDS);
 
-      // Create user with role 2 (user) - only user registration allowed
+      // Create user
       const userId = uuidv4();
       const result = await client.query(
         `INSERT INTO sapi.users (id, full_name, email, password_hash, role) 
          VALUES ($1, $2, $3, $4, $5) 
          RETURNING id, full_name, email, role, created_at`,
-        [userId, full_name, email.toLowerCase(), passwordHash, ROLES.USER]
+        [userId, full_name, email.toLowerCase(), passwordHash, userRole]
       );
 
       const user = result.rows[0];
@@ -93,9 +119,9 @@ async function register(request, reply) {
         { expiresIn: JWT_EXPIRES_IN }
       );
 
-      return {
+      const response = {
         success: true,
-        message: 'User registered successfully',
+        message: userRole === ROLES.ADMIN ? 'Admin registered successfully' : 'User registered successfully',
         data: {
           user: {
             id: user.id,
@@ -108,6 +134,13 @@ async function register(request, reply) {
           token
         }
       };
+
+      // For admin registration, include the generated password in response
+      if (userRole === ROLES.ADMIN) {
+        response.data.generated_password = finalPassword;
+      }
+
+      return response;
     } finally {
       client.release();
     }
@@ -205,6 +238,93 @@ async function login(request, reply) {
   }
 }
 
+// List users with optional role filter
+async function getUsers(request, reply) {
+  try {
+    const { role, page = 1, limit = 10 } = request.query || {};
+    
+    const client = await request.server.pg.connect();
+    
+    try {
+      let whereClause = '';
+      const params = [];
+      
+      // Filter by role if provided
+      if (role !== undefined) {
+        whereClause = 'WHERE role = $1';
+        params.push(parseInt(role));
+      }
+      
+      // Get total count
+      const countResult = await client.query(
+        `SELECT COUNT(*) as total FROM sapi.users ${whereClause}`,
+        params
+      );
+      const total = parseInt(countResult.rows[0].total);
+      
+      // Get users list
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      const queryParams = [...params, parseInt(limit), offset];
+      
+      const result = await client.query(
+        `SELECT id, full_name, email, role, created_at 
+         FROM sapi.users 
+         ${whereClause}
+         ORDER BY created_at DESC 
+         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        queryParams
+      );
+      
+      // Format created_at as UK time
+      const users = result.rows.map(user => {
+        const date = new Date(user.created_at);
+        const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/London',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        const parts = ukFormatter.formatToParts(date);
+        const getPart = (type) => parts.find(p => p.type === type)?.value;
+        const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+        
+        return {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+          role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
+          created_at: createdAtUK
+        };
+      });
+      
+      return {
+        success: true,
+        data: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(total / parseInt(limit)),
+          users
+        }
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
 // Middleware to verify JWT token
 async function verifyToken(request, reply) {
   try {
@@ -252,6 +372,7 @@ function requireAdmin(request, reply, done) {
 module.exports = {
   register,
   login,
+  getUsers,
   verifyToken,
   requireAdmin,
   ROLES
