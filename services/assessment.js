@@ -163,7 +163,158 @@ async function getResults(pg, assessmentId) {
   return result.rows[0];
 }
 
+async function getAssessmentDetails(pg, assessmentId) {
+  const client = await pg.connect();
+  
+  try {
+    // Get assessment results with profile info
+    const assessmentResult = await client.query(
+      `SELECT 
+        a.id as assessment_id,
+        a.created_at,
+        r.compute_capacity,
+        r.capital_formation,
+        r.regulatory_readiness,
+        r.data_sovereignty,
+        r.directed_intelligence,
+        r.sapi_score,
+        r.sapi_tier,
+        up.country,
+        up.respondent_name,
+        up.title,
+        up.ministry_or_department,
+        up.contact_email,
+        up.development_stage
+      FROM sapi.assessments a
+      JOIN sapi.results r ON a.id = r.assessment_id
+      LEFT JOIN sapi.user_profiles up ON a.user_profile_id = up.id
+      WHERE a.id = $1`,
+      [assessmentId]
+    );
+    
+    if (assessmentResult.rows.length === 0) {
+      return null;
+    }
+    
+    const assessment = assessmentResult.rows[0];
+    
+    // Get all answers with question details
+    const answersResult = await client.query(
+      `SELECT 
+        ans.question_id,
+        ans.selected_option,
+        ans.score,
+        q.dimension,
+        q.dimension_name,
+        q.question_text,
+        q.option_a,
+        q.option_b,
+        q.option_c,
+        q.option_d,
+        q.option_e,
+        q.score_a,
+        q.score_b,
+        q.score_c,
+        q.score_d,
+        q.score_e
+      FROM sapi.answers ans
+      JOIN sapi.questions q ON ans.question_id = q.id
+      WHERE ans.assessment_id = $1
+      ORDER BY q.dimension, q.id`,
+      [assessmentId]
+    );
+    
+    // Group answers by dimension
+    const dimensionQuestions = {};
+    answersResult.rows.forEach(row => {
+      if (!dimensionQuestions[row.dimension]) {
+        dimensionQuestions[row.dimension] = {
+          dimension_id: row.dimension,
+          dimension_name: row.dimension_name,
+          questions: []
+        };
+      }
+      
+      const optionText = {
+        'a': row.option_a,
+        'b': row.option_b,
+        'c': row.option_c,
+        'd': row.option_d,
+        'e': row.option_e
+      }[row.selected_option.toLowerCase()];
+      
+      dimensionQuestions[row.dimension].questions.push({
+        question_id: row.question_id,
+        question_text: row.question_text,
+        selected_option: row.selected_option.toUpperCase(),
+        selected_text: optionText,
+        score: row.score
+      });
+    });
+    
+    // Format created_at as UK time
+    const date = new Date(assessment.created_at);
+    const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    const parts = ukFormatter.formatToParts(date);
+    const getPart = (type) => parts.find(p => p.type === type)?.value;
+    const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+    
+    return {
+      assessment_id: assessment.assessment_id,
+      created_at: createdAtUK,
+      country: assessment.country,
+      respondent_name: assessment.respondent_name,
+      title: assessment.title,
+      ministry_or_department: assessment.ministry_or_department,
+      contact_email: assessment.contact_email,
+      development_stage: assessment.development_stage,
+      sapi_score: parseFloat(assessment.sapi_score),
+      tier: assessment.sapi_tier,
+      dimensions: {
+        compute_capacity: {
+          score: parseFloat(assessment.compute_capacity),
+          name: 'Compute Capacity',
+          weight: 0.175
+        },
+        capital_formation: {
+          score: parseFloat(assessment.capital_formation),
+          name: 'Capital Formation',
+          weight: 0.225
+        },
+        regulatory_readiness: {
+          score: parseFloat(assessment.regulatory_readiness),
+          name: 'Regulatory Readiness',
+          weight: 0.175
+        },
+        data_sovereignty: {
+          score: parseFloat(assessment.data_sovereignty),
+          name: 'Data Sovereignty',
+          weight: 0.125
+        },
+        directed_intelligence: {
+          score: parseFloat(assessment.directed_intelligence),
+          name: 'Directed Intelligence',
+          weight: 0.275
+        }
+      },
+      dimension_breakdown: Object.values(dimensionQuestions)
+    };
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   processAssessment,
-  getResults
+  getResults,
+  getAssessmentDetails
 };

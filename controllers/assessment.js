@@ -65,7 +65,35 @@ async function getResults(request, reply) {
   }
 }
 
+async function getAssessmentDetails(request, reply) {
+  try {
+    const { id } = request.params;
+    const result = await assessmentService.getAssessmentDetails(request.server.pg, id);
+
+    if (!result) {
+      reply.code(404);
+      return {
+        success: false,
+        error: 'Assessment not found'
+      };
+    }
+
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
 module.exports = {
   submitAssessment,
-  getResults
+  getResults,
+  getAssessmentDetails
 };
