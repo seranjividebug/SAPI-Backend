@@ -4,16 +4,8 @@ async function createProfile(request, reply) {
   try {
     const { country, respondent_name, title, ministry_or_department, contact_email, development_stage } = request.body || {};
 
-    // Get user_id from JWT token (set by verifyToken middleware)
-    const userId = request.user?.user_id;
-    
-    if (!userId) {
-      reply.code(401);
-      return {
-        success: false,
-        error: 'Authentication required. Please login first.'
-      };
-    }
+    // Get user_id from JWT token if authenticated (optional for public access)
+    const userId = request.user?.user_id || null;
 
     // Validation
     if (!country || !respondent_name || !contact_email) {
