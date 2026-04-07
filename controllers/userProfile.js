@@ -49,6 +49,23 @@ async function createProfile(request, reply) {
 
       const profile = result.rows[0];
 
+      // Format created_at as UK time using Intl.DateTimeFormat
+      const date = new Date(profile.created_at);
+      const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const parts = ukFormatter.formatToParts(date);
+      const getPart = (type) => parts.find(p => p.type === type)?.value;
+      const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+      console.log('Raw DB timestamp:', profile.created_at);
+console.log('UK formatted:', createdAtUK);
       return {
         success: true,
         message: 'User profile created successfully',
@@ -61,7 +78,7 @@ async function createProfile(request, reply) {
           ministry_or_department: profile.ministry_or_department,
           contact_email: profile.contact_email,
           development_stage: profile.development_stage,
-          created_at: profile.created_at
+          created_at: createdAtUK
         }
       };
     } finally {
