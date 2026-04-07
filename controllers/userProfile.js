@@ -64,8 +64,6 @@ async function createProfile(request, reply) {
       const parts = ukFormatter.formatToParts(date);
       const getPart = (type) => parts.find(p => p.type === type)?.value;
       const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
-      console.log('Raw DB timestamp:', profile.created_at);
-console.log('UK formatted:', createdAtUK);
       return {
         success: true,
         message: 'User profile created successfully',
