@@ -36,6 +36,7 @@ fastify.register(require('./routes/questions'), { prefix: '/api/questions' });
 fastify.register(require('./routes/assessment'), { prefix: '/api/assessment' });
 fastify.register(require('./routes/roadmap'), { prefix: '/api/roadmap' });
 fastify.register(require('./routes/dashboard'), { prefix: '/api/dashboard' });
+fastify.register(require('./routes/pdf'), { prefix: '/api/pdf' });
 
 // Health check endpoint
 fastify.get('/health', async () => {
