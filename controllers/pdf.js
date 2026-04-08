@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const assessmentService = require('../services/assessment');
 
 async function generateDimensionAnalysisPDF(request, reply) {
@@ -47,10 +47,7 @@ async function generateDimensionAnalysisPDF(request, reply) {
     };
     const tierColor = tierColors[tier.toUpperCase()] || '#e8d890';
 
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    const browser = await chromium.launch();
 
     const page = await browser.newPage();
 
