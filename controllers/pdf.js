@@ -89,44 +89,76 @@ async function generateDimensionAnalysisPDF(request, reply) {
       doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).stroke('#d4a520').lineWidth(2);
 
       // Header
-      doc.font('Helvetica-Bold').fontSize(20).fillColor('#1a1a1a').text('SAPI Assessment Report', 40, 40);
-      doc.font('Helvetica-Bold').fontSize(16).fillColor('#d4a520').text(nationName, 400, 40, { align: 'right' });
-      doc.moveTo(40, 65).lineTo(555, 65).stroke('#e0e0e0');
+      const headerY = 40;
+      const logoSize = 35;
+      
+      // Add logo with error handling - try local file first
+      try {
+        // Try local file first
+        doc.image('assets/sapi-logo.png', 40, headerY, { width: logoSize, height: logoSize });
+      } catch (localError) {
+        try {
+          // Fallback to external URL
+          doc.image('https://i.ibb.co/0Vc3cQqm/Picture1.png', 40, headerY, { width: logoSize, height: logoSize });
+        } catch (error) {
+          console.log('Logo not found, proceeding without logo');
+        }
+      }
+      
+      // Title with reduced font size
+      doc.font('Helvetica-Bold').fontSize(16).fillColor('#2c3e50').text('SAPI Assessment Report', 40 + logoSize + 15, headerY + 10);
+      
+      // Country name on the right
+      doc.font('Helvetica').fontSize(14).fillColor('#d4a520').text(nationName, 400, headerY + 12, { align: 'right' });
+      
+      // Subtle border line under header with more spacing
+      doc.moveTo(40, headerY + logoSize + 15).lineTo(555, headerY + logoSize + 15).stroke('#e8e8e8').lineWidth(1);
 
       // Main card box
-      doc.roundedRect(40, 80, 515, 220, 10).stroke('#e0e0e0').fill('#ffffff');
+      const mainCardY = headerY + logoSize + 25;
+      doc.roundedRect(40, mainCardY, 515, 220, 10).stroke('#e0e0e0').fill('#ffffff');
 
-      // Score section
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#333333').text('COMPOSITE SAPI SCORE', 60, 100);
-      doc.font('Helvetica-Bold').fontSize(48).fillColor('#d4a520').text(sapiScore, 60, 120);
+      // Score section - aligned with chart
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#333333').text('COMPOSITE SAPI SCORE', 60, mainCardY + 20);
+      doc.font('Helvetica-Bold').fontSize(48).fillColor('#d4a520').text(sapiScore, 60, mainCardY + 35);
 
-      // Tier badge
-      doc.roundedRect(60, 175, 120, 25, 12).stroke('#d4a520').fill('rgba(212, 165, 32, 0.15)');
-      doc.circle(72, 187.5, 3).fill('#d4a520');
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#b8860b').text(tier, 82, 182);
+      // Tier badge with proper padding
+      const tierTextWidth = doc.widthOfString(tier, { font: 'Helvetica-Bold', fontSize: 9 });
+      const badgeWidth = tierTextWidth + 2; // Reduced padding: 5px on each side
+      const badgeX = 60 + (120 - badgeWidth) / 2; // Center the badge in 120px area
+      
+
+
+      doc.fillColor('#000')
+         .font('Helvetica-Bold')
+         .fontSize(9)
+         .text(tier, badgeX, mainCardY + 102, {
+            width: badgeWidth,
+            align: 'center'
+         });
 
       // Tier legend
-      const legendY = 210;
+      const legendY = mainCardY + 130;
       const legendItems = [
-        { color: '#4caf7c', text: '80-100 — Sovereign AI Leader' },
-        { color: '#5c7cfa', text: '60-79 — Advanced' },
-        { color: '#e8d890', text: '40-59 — Developing' },
-        { color: '#d4a574', text: '20-39 — Nascent' },
-        { color: '#d85a6a', text: '1-19 — Pre-conditions Unmet' }
+        { color: '#4caf7c', text: '80-100 - Sovereign AI Leader' },
+        { color: '#5c7cfa', text: '60-79 - Advanced' },
+        { color: '#d4a520', text: '40-59 - Developing' },
+        { color: '#d4a574', text: '20-39 - Nascent' },
+        { color: '#d85a6a', text: '1-19 - Pre-conditions Unmet' }
       ];
       legendItems.forEach((item, i) => {
         doc.rect(60, legendY + i * 12, 15, 2).fill(item.color);
         doc.font('Helvetica').fontSize(8).fillColor('#444444').text(item.text, 80, legendY + i * 12 - 2);
       });
 
-      // Chart section
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#333333').text('DIMENSION PROFILE · 0-100 SCALE', 280, 100);
-      doc.image(chartImage, 280, 115, { width: 250 });
+      // Chart section - aligned with score
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#333333').text('DIMENSION PROFILE · 0-100 SCALE', 280, mainCardY + 20);
+      doc.image(chartImage, 280, mainCardY + 35, { width: 250 });
 
       // Dimension cards
       const cardWidth = 95;
       const cardHeight = 130;
-      const cardY = 320;
+      const cardY = mainCardY + 240;
       const startX = 40;
 
       const dimensions = [
@@ -139,31 +171,72 @@ async function generateDimensionAnalysisPDF(request, reply) {
 
       dimensions.forEach((dim, i) => {
         const x = startX + i * (cardWidth + 10);
+        const isHigh = dim.score >= 60;
+        const statusText = isHigh ? 'HIGH' : 'MEDIUM';
         
-        // Card with gold top border
-        doc.roundedRect(x, cardY + 4, cardWidth, cardHeight - 4, 8).stroke('#e0e0e0').fill('#ffffff');
-        doc.rect(x, cardY, cardWidth, 4).fill('#d4a520');
+        // Card without gold top border - ensure consistent alignment
+        doc.roundedRect(x, cardY, cardWidth, cardHeight, 8).stroke('#e0e0e0').fill('#ffffff');
 
-        // D-label
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#c9a227').text(dim.id, x + 10, cardY + 15);
+        // D-label with light gold color - properly aligned
+        doc.font('Helvetica-Bold').fontSize(10).fillColor('#d4a520').text(dim.id, x + 10, cardY + 12);
 
-        // Badge
-        const badgeColor = dim.high ? '#4caf7c' : '#b8860b';
-        const badgeBg = dim.high ? 'rgba(76, 175, 124, 0.2)' : 'rgba(212, 165, 32, 0.2)';
-        const badgeText = dim.high ? 'HIGH' : 'MEDIUM';
+        // Status label with colored background - aligned to right
+        const statusTextWidth = doc.widthOfString(statusText, { font: 'Helvetica-Bold', fontSize: 7 });
+        const statusLabelWidth = statusTextWidth + 12;
+        const statusLabelX = x + cardWidth - statusLabelWidth - 10;
         
-        doc.roundedRect(x + 35, cardY + 13, 45, 14, 3).fill(badgeBg);
-        doc.font('Helvetica-Bold').fontSize(7).fillColor(dim.high ? '#2e7d52' : '#b8860b').text(badgeText, x + 42, cardY + 16);
+        doc.roundedRect(statusLabelX, cardY + 10, statusLabelWidth, 16, 8)
+           .fill(isHigh ? '#e6ffe6' : '#fffacd'); // Light green for HIGH, light yellow for MEDIUM
+        doc.font('Helvetica-Bold').fontSize(7).fillColor(isHigh ? '#008000' : '#daa520') // Dark green for HIGH, gold for MEDIUM
+           .text(statusText, statusLabelX + 6, cardY + 16);
 
-        // Dimension name
-        doc.font('Helvetica').fontSize(9).fillColor('#444444').text(dim.name, x + 10, cardY + 35, { width: cardWidth - 20 });
+        // Dimension name - ensure Helvetica font
+        doc.font('Helvetica').fontSize(6).fillColor('#333333').text(dim.name, x + 10, cardY + 32, { width: cardWidth - 20 });
 
-        // Score
-        doc.font('Helvetica-Bold').fontSize(22).fillColor('#d4a520').text(dim.score + '.0', x + 10, cardY + 65);
+        // Score without .0 and in black - ensure Helvetica-Bold font
+        doc.font('Helvetica-Bold').fontSize(24).fillColor('#000000').text(dim.score.toString(), x + 10, cardY + 58);
 
-        // Progress bar
-        doc.rect(x + 10, cardY + 95, cardWidth - 20, 3).fill('#f0f0f0');
-        doc.rect(x + 10, cardY + 95, (cardWidth - 20) * (dim.score / 100), 3).fill(dim.high ? '#4caf7c' : '#e8d890');
+        // Progress bar at bottom with updated colors - ensure proper alignment
+        const barY = cardY + 92;
+        doc.rect(x + 10, barY, cardWidth - 20, 4).fill('#f5f5f5');
+        doc.rect(x + 10, barY, (cardWidth - 20) * (dim.score / 100), 4).fill(isHigh ? '#4caf7c' : '#d4a520');
+      });
+
+      // ORGANISATION PROFILE section - modern two-column design
+      const orgProfileY = cardY + cardHeight + 5;
+      doc.roundedRect(40, orgProfileY, 515, 140, 10).stroke('#e0e0e0').fill('#ffffff');
+      
+      // Section title with subtle accent
+      doc.font('Helvetica-Bold').fontSize(12).fillColor('#333333').text('ORGANISATION PROFILE', 60, orgProfileY + 15);
+      
+      // Two-column layout with icons
+      const profileItems = [
+        { label: 'Industry', value: assessmentData.industry || 'Technology', icon: 'I', col: 0 },
+        { label: 'Org Size', value: assessmentData.org_size || 'Large Enterprise', icon: 'O', col: 1 },
+        { label: 'Geo Focus', value: assessmentData.geo_focus || 'Global', icon: 'G', col: 0 },
+        { label: 'AI Maturity', value: assessmentData.ai_maturity || 'Intermediate', icon: 'A', col: 1 }
+      ];
+      
+      profileItems.forEach((item, i) => {
+        const colX = item.col === 0 ? 60 : 295; // Left and right column positions
+        const rowY = Math.floor(i / 2) * 35; // Row spacing
+        const itemY = orgProfileY + 45 + rowY;
+        
+        // Icon circle with letter
+        const iconSize = 24;
+        const iconX = colX;
+        const iconY = itemY - 2;
+        
+        doc.circle(iconX + iconSize/2, iconY + iconSize/2, iconSize/2).fill('#f0f4f8');
+        doc.circle(iconX + iconSize/2, iconY + iconSize/2, iconSize/2).stroke('#d4a520').lineWidth(1);
+        doc.font('Helvetica-Bold').fontSize(10).fillColor('#d4a520').text(item.icon, iconX + iconSize/2 - 4, iconY + iconSize/2 - 5);
+        
+        // Label with better typography
+        const labelX = colX + iconSize + 12;
+        doc.font('Helvetica-Bold').fontSize(9).fillColor('#666666').text(item.label.toUpperCase(), labelX, itemY);
+        
+        // Value with emphasis
+        doc.font('Helvetica').fontSize(10).fillColor('#2c3e50').text(item.value, labelX, itemY + 12);
       });
 
       doc.end();
