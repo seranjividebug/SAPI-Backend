@@ -280,7 +280,7 @@ async function updateProfile(request, reply) {
       values.push(id);
 
       const updateQuery = `
-        UPDATE user_profiles 
+        UPDATE sapi.user_profiles 
         SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $${paramIndex}
         RETURNING id, user_id, country, respondent_name, title, ministry_or_department, contact_email, development_stage, created_at, updated_at
