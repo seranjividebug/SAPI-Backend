@@ -18,7 +18,7 @@
     "fastify": "^4.24.3",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.11.3",
-    "playwright": "^1.40.0",
+    "pdfkit": "^0.14.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
