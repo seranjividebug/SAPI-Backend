@@ -108,11 +108,11 @@ doc.moveTo(authorLineX, authorY - 10).lineTo(authorLineX, authorY + 90)
 
 // Author text — right of vertical line (dynamic from assessment data)
 doc.font('Times-Roman').fontSize(12).fillColor('#FBF5E6')
-  .text(assessmentData.author_name || 'H.E. Dr. Khalid Al-Mansouri', authorLineX + 12, authorY);
+  .text(assessmentData.respondent_name || 'H.E. Dr. Khalid Al-Mansouri', authorLineX + 12, authorY);
 doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
-  .text(assessmentData.author_position || 'Minister for Digital Infrastructure', authorLineX + 12, authorY + 20);
+  .text(assessmentData.title || 'Minister for Digital Infrastructure', authorLineX + 12, authorY + 20);
 doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
-  .text(assessmentData.author_ministry || 'Ministry of Digital Economy & AI', authorLineX + 12, authorY + 36);
+  .text(assessmentData.ministry_or_department || 'Ministry of Digital Economy & AI', authorLineX + 12, authorY + 36);
 doc.font('Times-Roman').fontSize(9).fillColor('#C9963A')
   .text(assessmentData.country || 'United Arab Emirates', authorLineX + 12, authorY + 52);
 
@@ -137,6 +137,7 @@ doc.font('Helvetica').fontSize(7.5).fillColor('#FBF5E6')
 // Page number
 doc.font('Times-Roman').fontSize(9).fillColor('#FBF5E6')
   .text('1', doc.page.width - 35, footerY + 33);
+
       // Add second page for Executive Summary
       doc.addPage({ size: 'A4', margin: 0 });
 
@@ -226,168 +227,181 @@ doc.font('Times-Roman').fontSize(9).fillColor('#FBF5E6')
       doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text('2', 480, footerY2 + 35);
 
       // Add third page for Dimension Scorecard
-     // Add third page for Dimension Scorecard
-doc.addPage({ size: 'A4', margin: 0 });
-doc.fillColor('#0F0830').rect(0, 0, doc.page.width, doc.page.height).fill();
+      doc.addPage({ size: 'A4', margin: 0 });
+      doc.fillColor('#0F0830').rect(0, 0, doc.page.width, doc.page.height).fill();
 
-// Right panel background (Priority Interventions)
-const rightPanelX = 375;
-doc.fillColor('#1A1540').rect(rightPanelX, 0, doc.page.width - rightPanelX, doc.page.height).fill();
-// Gold vertical separator line
-doc.moveTo(rightPanelX, 0).lineTo(rightPanelX, doc.page.height).stroke('#C9963A').lineWidth(1);
+      // Right panel background (Priority Interventions)
+      const rightPanelX = 375;
+      doc.fillColor('#1A1540').rect(rightPanelX, 0, doc.page.width - rightPanelX, doc.page.height).fill();
+      // Gold vertical separator line
+      doc.moveTo(rightPanelX, 0).lineTo(rightPanelX, doc.page.height).stroke('#C9963A').lineWidth(1);
 
-// === LEFT SECTION HEADER ===
-doc.font('Helvetica-Bold').fontSize(16).fillColor('#FBF5E6').text('DIMENSION SCORECARD', 25, 22);
-doc.moveTo(25, 42).lineTo(200, 42).stroke('#C9963A').lineWidth(1.5);
+      // === LEFT SECTION HEADER ===
+      doc.font('Helvetica-Bold').fontSize(16).fillColor('#FBF5E6').text('DIMENSION SCORECARD', 25, 22);
+      doc.moveTo(25, 42).lineTo(200, 42).stroke('#C9963A').lineWidth(1.5);
 
 // === RIGHT SECTION HEADER ===
-doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6').text('PRIORITY INTERVENTIONS', rightPanelX + 15, 22);
-doc.moveTo(rightPanelX + 15, 37).lineTo(doc.page.width - 15, 37).stroke('#C9963A').lineWidth(1);
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6').text('PRIORITY INTERVENTIONS', rightPanelX + 15, 22);
+      doc.moveTo(rightPanelX + 15, 37).lineTo(doc.page.width - 15, 37).stroke('#C9963A').lineWidth(1);
 
-// === DIMENSION CARDS ===
-const cardStartY = 55;
-const cardGap = 8;
-const cardHeight = 118;
-const cardX = 15;
-const cardWidth = rightPanelX - cardX - 10;
+      // === DIMENSION CARDS ===
+      const cardStartY = 55;
+      const cardGap = 8;
+      const cardHeight = 118;
+      const cardX = 15;
+      const cardWidth = rightPanelX - cardX - 10;
 
-const dimensionDetails = [
-  {
-    id: 'D1', name: 'Compute Capacity', subtitle: 'Infrastructure Sovereignty',
-    description: 'Compute access remains the binding constraint on your sovereign AI ambition. Reliance on hyperscaler infrastructure introduces jurisdictional exposure inconsistent with strategic autonomy objectives. Establishing a sovereign compute procurement roadmap is an immediate priority.',
-    score: finalScores.compute,
-    status: finalScores.compute < 40 ? 'LOW' : finalScores.compute >= 60 ? 'HIGH' : 'MEDIUM'
-  },
-  {
-    id: 'D2', name: 'Capital Formation', subtitle: 'Investment Architecture',
-    description: 'Capital flows toward AI are present but lack the coherence and scale of leading sovereign actors. A consolidated national AI investment architecture coordinating sovereign fund, public budget, and private capital would substantially improve deployment velocity.',
-    score: finalScores.capital,
-    status: finalScores.capital < 40 ? 'LOW' : finalScores.capital >= 60 ? 'HIGH' : 'MEDIUM'
-  },
-  {
-    id: 'D3', name: 'Regulatory Readiness', subtitle: 'Governance Framework',
-    description: 'Your regulatory architecture provides a credible governance foundation for sovereign AI deployment. Continued refinement of adaptive regulatory mechanisms, particularly in response to model capability advances, is necessary to maintain this advantage.',
-    score: finalScores.regulatory,
-    status: finalScores.regulatory < 40 ? 'LOW' : finalScores.regulatory >= 60 ? 'HIGH' : 'MEDIUM'
-  },
-  {
-    id: 'D4', name: 'Data Sovereignty', subtitle: 'Digital Asset Control',
-    description: 'Data governance frameworks are active but have not achieved strategic coherence. Priority should be given to establishing national data trusts and formalising bilateral data exchange terms with strategic partner states.',
-    score: finalScores.talent,
-    status: finalScores.talent < 40 ? 'LOW' : finalScores.talent >= 60 ? 'HIGH' : 'MEDIUM'
-  },
-  {
-    id: 'D5', name: 'Directed Intelligence Maturity', subtitle: 'Strategic AI Deployment',
-    description: 'AI deployment is present across select government functions but lacks the strategic direction and evaluation rigour of leading sovereign actors. A national AI deployment doctrine with clear ministerial accountability is the highest-leverage next intervention.',
-    score: finalScores.nce,
-    status: finalScores.nce < 40 ? 'LOW' : finalScores.nce >= 60 ? 'HIGH' : 'MEDIUM'
-  }
-];
+      const dimensionDetails = [
+        {
+          id: 'D1', 
+          name: 'Compute Capacity', 
+          subtitle: 'Infrastructure Sovereignty',
+          description: 'Compute access remains the binding constraint on your sovereign AI ambition. Reliance on hyperscaler infrastructure introduces jurisdictional exposure inconsistent with strategic autonomy objectives. Establishing a sovereign compute procurement roadmap is an immediate priority.',
+          score: finalScores.compute,
+          status: finalScores.compute < 40 ? 'LOW' : finalScores.compute >= 60 ? 'HIGH' : 'MEDIUM'
+        },
+        {
+          id: 'D2', 
+          name: 'Capital Formation', 
+          subtitle: 'Investment Architecture',
+          description: 'Capital flows toward AI are present but lack the coherence and scale of leading sovereign actors. A consolidated national AI investment architecture coordinating sovereign fund, public budget, and private capital would substantially improve deployment velocity.',
+          score: finalScores.capital,
+          status: finalScores.capital < 40 ? 'LOW' : finalScores.capital >= 60 ? 'HIGH' : 'MEDIUM'
+        },
+        {
+          id: 'D3', 
+          name: 'Regulatory Readiness', 
+          subtitle: 'Governance Framework',
+          description: 'Your regulatory architecture provides a credible governance foundation for sovereign AI deployment. Continued refinement of adaptive regulatory mechanisms, particularly in response to model capability advances, is necessary to maintain this advantage.',
+          score: finalScores.regulatory,
+          status: finalScores.regulatory < 40 ? 'LOW' : finalScores.regulatory >= 60 ? 'HIGH' : 'MEDIUM'
+        },
+        {
+          id: 'D4', 
+          name: 'Data Sovereignty', 
+          subtitle: 'Digital Asset Control',
+          description: 'Data governance frameworks are active but have not achieved strategic coherence. Priority should be given to establishing national data trusts and formalising bilateral data exchange terms with strategic partner states.',
+          score: finalScores.talent,
+          status: finalScores.talent < 40 ? 'LOW' : finalScores.talent >= 60 ? 'HIGH' : 'MEDIUM'
+        },
+        {
+          id: 'D5', 
+          name: 'Directed Intelligence Maturity', 
+          subtitle: 'Strategic AI Deployment',
+          description: 'AI deployment is present across select government functions but lacks the strategic direction and evaluation rigour of leading sovereign actors. A national AI deployment doctrine with clear ministerial accountability is the highest-leverage next intervention.',
+          score: finalScores.nce,
+          status: finalScores.nce < 40 ? 'LOW' : finalScores.nce >= 60 ? 'HIGH' : 'MEDIUM'
+        }
+      ];
 
-dimensionDetails.forEach((dim, index) => {
-  const y = cardStartY + index * (cardHeight + cardGap);
-  
-  let barColor = dim.status === 'LOW' ? '#dc3545' : dim.status === 'HIGH' ? '#28a745' : '#ffc107';
-  let statusTextColor = dim.status === 'LOW' ? '#dc3545' : dim.status === 'HIGH' ? '#28a745' : '#ffc107';
+      dimensionDetails.forEach((dim, index) => {
+        const y = cardStartY + index * (cardHeight + cardGap);
+        
+        let barColor = dim.status === 'LOW' ? '#dc3545' : dim.status === 'HIGH' ? '#28a745' : '#ffc107';
+        let statusTextColor = dim.status === 'LOW' ? '#dc3545' : dim.status === 'HIGH' ? '#28a745' : '#ffc107';
 
-  // Card background
-  doc.fillColor('#1A1540').rect(cardX, y, cardWidth, cardHeight).fill();
+        // Card background
+        doc.fillColor('#1A1540').rect(cardX, y, cardWidth, cardHeight).fill();
 
-  // Left colored vertical strip
-  doc.fillColor(barColor).rect(cardX, y, 4, cardHeight).fill();
+        // Left colored vertical strip
+        doc.fillColor(barColor).rect(cardX, y, 4, cardHeight).fill();
 
-  // Top row: "D1 — Compute Capacity" on left, score on right
-  const titleX = cardX + 14;
-  const scoreX = cardX + cardWidth - 55;
+        // Top row: "D1 — Compute Capacity" on left, score on right
+        const titleX = cardX + 14;
+        const scoreX = cardX + cardWidth - 55;
 
-  doc.font('Helvetica-Bold').fontSize(11).fillColor('#FBF5E6')
-    .text(`${dim.id} \u2014 ${dim.name}`, titleX, y + 12, { width: cardWidth - 80 });
+        doc.font('Helvetica-Bold').fontSize(11).fillColor('#FBF5E6')
+          .text(`${dim.id} — ${dim.name}`, titleX, y + 12, { width: cardWidth - 80 });
 
-  // Score (large, colored) top-right
-  doc.font('Helvetica-Bold').fontSize(30).fillColor(barColor)
-    .text(dim.score.toString(), scoreX, y + 8, { width: 50, align: 'right' });
+        // Score (large, colored) top-right
+        doc.font('Helvetica-Bold').fontSize(30).fillColor(barColor)
+          .text(dim.score.toString(), scoreX, y + 8, { width: 50, align: 'right' });
 
-  // Status below score, right-aligned
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(statusTextColor)
-    .text(dim.status, scoreX, y + 44, { width: 50, align: 'right' });
+        // Status below score, right-aligned
+        doc.font('Helvetica-Bold').fontSize(8).fillColor(statusTextColor)
+          .text(dim.status, scoreX, y + 44, { width: 50, align: 'right' });
 
-  // Subtitle
-  doc.font('Helvetica').fontSize(8).fillColor('#8888aa')
-    .text(dim.subtitle, titleX, y + 30);
+        // Subtitle
+        doc.font('Helvetica').fontSize(8).fillColor('#8888aa')
+          .text(dim.subtitle, titleX, y + 30);
 
-  // Horizontal divider
-  doc.moveTo(cardX + 4, y + 52).lineTo(cardX + cardWidth, y + 52).stroke('#2a2a4a').lineWidth(0.5);
+        // Horizontal divider
+        doc.moveTo(cardX + 4, y + 52).lineTo(cardX + cardWidth, y + 52).stroke('#2a2a4a').lineWidth(0.5);
 
-  // Description
-  doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6')
-    .text(dim.description, titleX, y + 60, { width: cardWidth - 70, lineGap: 1.5 });
-});
+        // Description
+        doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6')
+          .text(dim.description, titleX, y + 60, { width: cardWidth - 70, lineGap: 1.5 });
+      });
 
 // === PRIORITY INTERVENTIONS (RIGHT PANEL) ===
-const priorityItems = [
-  {
-    rank: '#1 PRIORITY',
-    score: finalScores.compute,
-    status: finalScores.compute < 40 ? 'LOW' : finalScores.compute >= 60 ? 'HIGH' : 'MEDIUM',
-    dId: 'D1', name: 'Compute Capacity',
-    description: 'Commission sovereign compute capacity assessment and gap analysis.'
-  },
-  {
-    rank: '#2 PRIORITY',
-    score: finalScores.talent,
-    status: finalScores.talent < 40 ? 'LOW' : finalScores.talent >= 60 ? 'HIGH' : 'MEDIUM',
-    dId: 'D4', name: 'Data Sovereignty',
-    description: 'Audit all cross-border data flows and identify material sovereignty exposures.'
-  },
-  {
-    rank: '#3 PRIORITY',
-    score: finalScores.capital,
-    status: finalScores.capital < 40 ? 'LOW' : finalScores.capital >= 60 ? 'HIGH' : 'MEDIUM',
-    dId: 'D2', name: 'Capital Formation',
-    description: 'Establish National AI Investment Committee with sovereign fund mandate.'
-  }
-];
+      const priorityItems = [
+        {
+          rank: '#1 PRIORITY',
+          score: finalScores.compute,
+          status: finalScores.compute < 40 ? 'LOW' : finalScores.compute >= 60 ? 'HIGH' : 'MEDIUM',
+          dId: 'D1', 
+          name: 'Compute Capacity',
+          description: 'Commission sovereign compute capacity assessment and gap analysis.'
+        },
+        {
+          rank: '#2 PRIORITY',
+          score: finalScores.talent,
+          status: finalScores.talent < 40 ? 'LOW' : finalScores.talent >= 60 ? 'HIGH' : 'MEDIUM',
+          dId: 'D4', 
+          name: 'Data Sovereignty',
+          description: 'Audit all cross-border data flows and identify material sovereignty exposures.'
+        },
+        {
+          rank: '#3 PRIORITY',
+          score: finalScores.capital,
+          status: finalScores.capital < 40 ? 'LOW' : finalScores.capital >= 60 ? 'HIGH' : 'MEDIUM',
+          dId: 'D2', 
+          name: 'Capital Formation',
+          description: 'Establish National AI Investment Committee with sovereign fund mandate.'
+        }
+      ];
 
-const pX = rightPanelX + 15;
-const pWidth = doc.page.width - rightPanelX - 25;
-let pY = 55;
+      const pX = rightPanelX + 15;
+      const pWidth = doc.page.width - rightPanelX - 25;
+      let pY = 55;
 
-priorityItems.forEach((item, index) => {
-  if (index > 0) {
-    doc.moveTo(pX, pY - 8).lineTo(doc.page.width - 15, pY - 8).stroke('#2a2a4a').lineWidth(0.5);
-  }
-  
-  let sColor = item.status === 'LOW' ? '#dc3545' : item.status === 'HIGH' ? '#28a745' : '#ffc107';
+      priorityItems.forEach((item, index) => {
+        if (index > 0) {
+          doc.moveTo(pX, pY - 8).lineTo(doc.page.width - 15, pY - 8).stroke('#2a2a4a').lineWidth(0.5);
+        }
+        
+        let sColor = item.status === 'LOW' ? '#dc3545' : item.status === 'HIGH' ? '#28a745' : '#ffc107';
 
-  // Rank label
-  doc.font('Helvetica').fontSize(7).fillColor('#FBF5E6').text(item.rank, pX, pY);
-  pY += 12;
+        // Rank label
+        doc.font('Helvetica').fontSize(7).fillColor('#FBF5E6').text(item.rank, pX, pY);
+        pY += 12;
 
-  // Score large + status on same row
-  doc.font('Helvetica-Bold').fontSize(28).fillColor(sColor).text(item.score.toString(), pX, pY);
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(sColor).text(item.status, pX + 45, pY + 10);
-  pY += 36;
+        // Score large + status on same row
+        doc.font('Helvetica-Bold').fontSize(28).fillColor(sColor).text(item.score.toString(), pX, pY);
+        doc.font('Helvetica-Bold').fontSize(8).fillColor(sColor).text(item.status, pX + 45, pY + 10);
+        pY += 36;
 
-  // D-number
-  doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text(item.dId, pX, pY);
-  pY += 11;
+        // D-number
+        doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text(item.dId, pX, pY);
+        pY += 11;
 
-  // Name
-  doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6').text(item.name, pX, pY, { width: pWidth });
-  pY += 14;
+        // Name
+        doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6').text(item.name, pX, pY, { width: pWidth });
+        pY += 14;
 
-  // Description
-  doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text(item.description, pX, pY, { width: pWidth, lineGap: 1 });
-  pY += 50;
-});
+        // Description
+        doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text(item.description, pX, pY, { width: pWidth, lineGap: 1 });
+        pY += 50;
+      });
 
 // Footer for third page
-const footerY3 = 750;
-doc.moveTo(28, footerY3).lineTo(doc.page.width - 28, footerY3).stroke('#C9963A').lineWidth(1);
-doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('© 2025 The Sovereign AI Power Index', 28, footerY3 + 12);
-doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('sapi.ai', doc.page.width / 2 - 20, footerY3 + 12);
-doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('Classification: Restricted', doc.page.width - 140, footerY3 + 12);
-doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text('3', doc.page.width - 35, footerY3 + 30);
+      const footerY3 = 750;
+      doc.moveTo(28, footerY3).lineTo(doc.page.width - 28, footerY3).stroke('#C9963A').lineWidth(1);
+      doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('© 2025 The Sovereign AI Power Index', 28, footerY3 + 12);
+      doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('sapi.ai', doc.page.width / 2 - 20, footerY3 + 12);
+      doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('Classification: Restricted', doc.page.width - 140, footerY3 + 12);
+      doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text('3', doc.page.width - 35, footerY3 + 30);
+
       // Add fourth page for 12-18 Month Sovereign AI Roadmap
       doc.addPage({ size: 'A4', margin: 0 });
 
@@ -461,17 +475,20 @@ doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text('3', doc.page.width
       // Unlock Deeper Diagnostic Capability section
       doc.rect(60, 470, 515, 80).fill('#14142b').stroke('#C9963A').lineWidth(1);
       
-      doc.font('Helvetica-Bold').fontSize(12).fillColor('#FBF5E6').text('UNLOCK DEEPER DIAGNOSTIC CAPABILITY', 80, 490);
+      doc.font('Helvetica-Bold').fontSize(12).fillColor('#FBF5E6').text('UNLOCK DEEPER DIAGNOSTIC CAPABILITY', 60, 490, {
+        width: 515,
+        align: 'center'
+      });
       
       const capabilityText = 'Access comprehensive sovereign AI development analytics, benchmark against peer nations, and receive tailored intervention strategies through our premium diagnostic platform.';
-      doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text(capabilityText, 80, 510, {
-        width: 460,
-        align: 'left'
+      doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text(capabilityText, 60, 510, {
+        width: 515,
+        align: 'center'
       });
 
       // CTA button
-      doc.rect(80, 540, 180, 15).fill('#d4a520');
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6').text('REQUEST PREMIUM ACCESS', 90, 543);
+      
+      
 
       // Footer for fourth page
       const footerY4 = 750;
