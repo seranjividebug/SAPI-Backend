@@ -139,7 +139,7 @@ doc.font('Helvetica').fontSize(7.5).fillColor('#FBF5E6')
   .text('Classification: Restricted', pageWidth - margin - 110, footerY + 35);
 
 // Page number
-doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
+doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6')
   .text('1', pageWidth - margin - 5, footerY + 33);
 
       // Add second page for Executive Summary
@@ -153,7 +153,7 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
       doc.moveTo(margin + 10, 70).lineTo(margin + 150, 70).stroke('#C9963A').lineWidth(1);
 
       // Score display
-      doc.font('Helvetica-Bold').fontSize(50).fillColor('#C9963A').text(sapiScore, margin + 10, 100);
+      doc.font('Helvetica-Bold').fontSize(40).fillColor('#C9963A').text(sapiScore, margin + 10, 100);
       doc.font('Helvetica').fontSize(18).fillColor('#FBF5E6').text('/100', margin + 110, 125);
 
       // Status badge
@@ -212,7 +212,7 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
         doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text(dim.name, startX + maxBarWidth + 20, y + 5);
 
         // Score and status
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#FBF5E6').text(dim.score.toString(), startX + maxBarWidth + 200, y + 5);
+        doc.font('Helvetica-Bold').fontSize(8).fillColor('#FBF5E6').text(dim.score.toString(), startX + maxBarWidth + 200, y + 5);
         doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6').text(dim.status, startX + maxBarWidth + 240, y + 6);
       });
 
@@ -229,7 +229,7 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('© 2025 The Sovereign AI Power Index', margin, footerY2 + 15);
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('sapi.ai', pageWidth / 2 - 20, footerY2 + 15);
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('Classification: Restricted', pageWidth - margin - 110, footerY2 + 15);
-      doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text('2', pageWidth - margin - 5, footerY2 + 35);
+      doc.font('Helvetica-Bold').fontSize(10).fillColor('#FBF5E6').text('2', pageWidth - margin - 5, footerY2 + 35);
 
       // Add third page for Dimension Scorecard
       doc.addPage({ size: 'A4', margins: { top: 0, bottom: 0, left: margin, right: margin } });
@@ -405,7 +405,7 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('© 2025 The Sovereign AI Power Index', margin, footerY3 + 12);
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('sapi.ai', pageWidth / 2 - 20, footerY3 + 12);
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('Classification: Restricted', pageWidth - margin - 110, footerY3 + 12);
-      doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text('3', pageWidth - margin - 5, footerY3 + 30);
+      doc.font('Helvetica-Bold').fontSize(10).fillColor('#FBF5E6').text('3', pageWidth - margin - 5, footerY3 + 30);
 
       // Add fourth page for 12-18 Month Sovereign AI Roadmap
       doc.addPage({ size: 'A4', margins: { top: 0, bottom: 0, left: margin, right: margin } });
@@ -460,7 +460,16 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
 
       phases.forEach((phase, index) => {
         doc.rect(currentX, 90, phaseWidth, 350).stroke('#C9963A').lineWidth(1);
-        doc.font('Helvetica-Bold').fontSize(10).fillColor('#C9963A').text(phase.title, currentX + 10, 100);
+        // Split title to style number differently
+        const titleMatch = phase.title.match(/(PHASE\s+)(\d+)/);
+        if (titleMatch) {
+          const prefix = titleMatch[1];
+          const number = titleMatch[2];
+          doc.font('Helvetica-Bold').fontSize(10).fillColor('#C9963A').text(prefix, currentX + 10, 100);
+          doc.font('Helvetica-Bold').fontSize(16).fillColor('#C9963A').text(number, currentX + 10 + doc.widthOfString(prefix, 10), 100);
+        } else {
+          doc.font('Helvetica-Bold').fontSize(10).fillColor('#C9963A').text(phase.title, currentX + 10, 100);
+        }
         doc.font('Helvetica-Bold').fontSize(12).fillColor('#FBF5E6').text(phase.subtitle, currentX + 10, 115);
         doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text(phase.months, currentX + 10, 130);
 
@@ -471,8 +480,8 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
           taskY += 35;
         });
 
-        doc.rect(currentX, 400, phaseWidth, 40).fill('#14142b').stroke('#C9963A').lineWidth(1);
-        doc.font('Helvetica-Bold').fontSize(9).fillColor('#C9963A').text(phase.focus, currentX + 10, 415);
+        doc.rect(currentX, 400, phaseWidth, 40).stroke('#C9963A').lineWidth(1);
+        doc.font('Helvetica-Bold').fontSize(9).fillColor('#C9963A').text(phase.focus, currentX + 10, 415, { width: phaseWidth - 20 });
 
         currentX += phaseWidth + phaseSpacing;
       });
@@ -495,7 +504,7 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('© 2025 The Sovereign AI Power Index', margin, footerY4 + 15);
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('sapi.ai', pageWidth / 2 - 20, footerY4 + 15);
       doc.font('Helvetica').fontSize(8).fillColor('#FBF5E6').text('Classification: Restricted', pageWidth - margin - 110, footerY4 + 15);
-      doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text('4', pageWidth - margin - 5, footerY4 + 35);
+      doc.font('Helvetica-Bold').fontSize(10).fillColor('#FBF5E6').text('4', pageWidth - margin - 5, footerY4 + 35);
 
       doc.end();
     });
