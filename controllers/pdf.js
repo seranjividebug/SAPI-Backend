@@ -242,15 +242,15 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
       doc.moveTo(rightPanelX, 0).lineTo(rightPanelX, doc.page.height).stroke('#C9963A').lineWidth(1);
 
       // === LEFT SECTION HEADER ===
-      doc.font('Helvetica-Bold').fontSize(16).fillColor('#FBF5E6').text('DIMENSION SCORECARD', margin + 10, 22);
-      doc.moveTo(margin + 10, 42).lineTo(margin + 200, 42).stroke('#C9963A').lineWidth(1.5);
+      doc.font('Helvetica-Bold').fontSize(16).fillColor('#FBF5E6').text('DIMENSION SCORECARD', margin + 10, 50);
+      doc.moveTo(margin + 10, 70).lineTo(margin + 200, 70).stroke('#C9963A').lineWidth(1.5);
 
 // === RIGHT SECTION HEADER ===
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6').text('PRIORITY INTERVENTIONS', rightPanelX + 15, 22);
-      doc.moveTo(rightPanelX + 15, 37).lineTo(rightPanelX + 120, 37).stroke('#C9963A').lineWidth(1);
+      doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6').text('PRIORITY INTERVENTIONS', rightPanelX + 15, 50);
+      doc.moveTo(rightPanelX + 15, 65).lineTo(rightPanelX + 120, 65).stroke('#C9963A').lineWidth(1);
 
       // === DIMENSION CARDS ===
-      const cardStartY = 55;
+      const cardStartY = 95;
       const cardGap = 8;
       const cardHeight = 118;
       const cardX = margin + 10;
@@ -368,7 +368,7 @@ doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6')
 
       const pX = rightPanelX + 15;
       const pWidth = pageWidth - rightPanelX - 50;
-      let pY = 55;
+      let pY = 95;
 
       priorityItems.forEach((item, index) => {
         if (index > 0) {
