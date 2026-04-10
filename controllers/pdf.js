@@ -212,7 +212,7 @@ doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6')
         doc.font('Helvetica').fontSize(10).fillColor('#FBF5E6').text(dim.name, startX + maxBarWidth + 20, y + 5);
 
         // Score and status
-        doc.font('Helvetica-Bold').fontSize(8).fillColor('#FBF5E6').text(dim.score.toString(), startX + maxBarWidth + 200, y + 5);
+        doc.font('Courier').fontSize(7).fillColor('#FBF5E6').text(dim.score.toString(), startX + maxBarWidth + 200, y + 5);
         doc.font('Helvetica').fontSize(9).fillColor('#FBF5E6').text(dim.status, startX + maxBarWidth + 240, y + 6);
       });
 
@@ -319,7 +319,7 @@ doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6')
           .text(`${dim.id} — ${dim.name}`, titleX, y + 12, { width: cardWidth - 80 });
 
         // Score (large, colored) top-right
-        doc.font('Helvetica-Bold').fontSize(30).fillColor(barColor)
+        doc.font('Helvetica-Bold').fontSize(24).fillColor(barColor)
           .text(dim.score.toString(), scoreX, y + 8, { width: 50, align: 'right' });
 
         // Status below score, right-aligned
@@ -382,7 +382,7 @@ doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6')
         pY += 12;
 
         // Score large + status on same row
-        doc.font('Helvetica-Bold').fontSize(28).fillColor(sColor).text(item.score.toString(), pX, pY);
+        doc.font('Helvetica-Bold').fontSize(22).fillColor(sColor).text(item.score.toString(), pX, pY);
         doc.font('Helvetica-Bold').fontSize(8).fillColor(sColor).text(item.status, pX + 45, pY + 10);
         pY += 36;
 
