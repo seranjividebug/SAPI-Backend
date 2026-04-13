@@ -420,7 +420,7 @@ doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6')
       // Roadmap Phases
       const phases = [
         {
-          title: 'PHASE 1',
+          title: 'PHASE I',
           subtitle: 'FOUNDATIONS',
           months: 'Months 1-4',
           tasks: [
@@ -431,7 +431,7 @@ doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6')
           focus: 'Focus: Compute Capacity'
         },
         {
-          title: 'PHASE 2',
+          title: 'PHASE II',
           subtitle: 'ACCELERATION',
           months: 'Months 5-10',
           tasks: [
@@ -442,7 +442,7 @@ doc.font('Helvetica-Bold').fontSize(9).fillColor('#FBF5E6')
           focus: 'Focus: Data Sovereignty'
         },
         {
-          title: 'PHASE 3',
+          title: 'PHASE III',
           subtitle: 'INTEGRATION',
           months: 'Months 11-18',
           tasks: [
