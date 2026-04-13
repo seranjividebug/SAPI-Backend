@@ -361,17 +361,17 @@ async function getUsers(request, reply) {
 async function getUserById(request, reply) {
   try {
     const { id } = request.params;
-    
+
     const client = await request.server.pg.connect();
-    
+
     try {
       const result = await client.query(
-        `SELECT id, full_name, email, role, created_at 
-         FROM sapi.users 
+        `SELECT id, full_name, email, role, created_at
+         FROM sapi.users
          WHERE id = $1`,
         [id]
       );
-      
+
       if (result.rows.length === 0) {
         reply.code(404);
         return {
@@ -379,9 +379,9 @@ async function getUserById(request, reply) {
           error: 'User not found'
         };
       }
-      
+
       const user = result.rows[0];
-      
+
       // Format created_at as UK time
       const date = new Date(user.created_at);
       const ukFormatter = new Intl.DateTimeFormat('en-GB', {
@@ -397,7 +397,72 @@ async function getUserById(request, reply) {
       const parts = ukFormatter.formatToParts(date);
       const getPart = (type) => parts.find(p => p.type === type)?.value;
       const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
-      
+
+      return {
+        success: true,
+        data: {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+          role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
+          created_at: createdAtUK
+        }
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// Get current authenticated user
+async function getCurrentUser(request, reply) {
+  try {
+    const userId = request.user.user_id;
+
+    const client = await request.server.pg.connect();
+
+    try {
+      const result = await client.query(
+        `SELECT id, full_name, email, role, created_at
+         FROM sapi.users
+         WHERE id = $1`,
+        [userId]
+      );
+
+      if (result.rows.length === 0) {
+        reply.code(404);
+        return {
+          success: false,
+          error: 'User not found'
+        };
+      }
+
+      const user = result.rows[0];
+
+      // Format created_at as UK time
+      const date = new Date(user.created_at);
+      const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const parts = ukFormatter.formatToParts(date);
+      const getPart = (type) => parts.find(p => p.type === type)?.value;
+      const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+
       return {
         success: true,
         data: {
@@ -633,14 +698,25 @@ function requireAdmin(request, reply, done) {
   done();
 }
 
+// Middleware to check if user is authenticated (role 2 or admin)
+function requireUser(request, reply, done) {
+  if (!request.user || (request.user.role !== ROLES.USER && request.user.role !== ROLES.ADMIN)) {
+    reply.code(403);
+    return done(new Error('Access denied. User authentication required.'));
+  }
+  done();
+}
+
 module.exports = {
   register,
   login,
   getUsers,
   getUserById,
+  getCurrentUser,
   updateUser,
   deleteUser,
   verifyToken,
   requireAdmin,
+  requireUser,
   ROLES
 };
