@@ -132,10 +132,12 @@ async function exportAssessments(request, reply) {
 
 function generateCSV(data) {
   const headers = [
+    'Assessment ID',
     'Country',
     'Respondent Name',
     'Title',
     'Ministry/Department',
+    'Development Stage',
     'SAPI Score',
     'Tier',
     'Date',
@@ -145,6 +147,17 @@ function generateCSV(data) {
     'Data Sovereignty',
     'Directed Intelligence'
   ];
+
+  // Helper function to escape CSV fields
+  const escapeCSV = (value) => {
+    if (value === null || value === undefined) return '';
+    const stringValue = String(value);
+    // If the value contains comma, quote, or newline, wrap in quotes and escape quotes
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    return stringValue;
+  };
 
   const rows = data.map(item => {
     let dateStr = 'N/A';
@@ -156,22 +169,24 @@ function generateCSV(data) {
       }
     }
     return [
-      item.country,
-      item.respondentName,
-      item.title,
-      item.ministry,
-      item.score,
-      item.tier,
+      item.id || '',
+      item.country || '',
+      item.respondentName || '',
+      item.title || '',
+      item.ministry || '',
+      item.developmentStage || '',
+      item.score || 0,
+      item.tier || '',
       dateStr,
-      item.dimensionScores.computeCapacity,
-      item.dimensionScores.capitalFormation,
-      item.dimensionScores.regulatoryReadiness,
-      item.dimensionScores.dataSovereignty,
-      item.dimensionScores.directedIntelligence
-    ];
+      item.dimensionScores?.computeCapacity || 0,
+      item.dimensionScores?.capitalFormation || 0,
+      item.dimensionScores?.regulatoryReadiness || 0,
+      item.dimensionScores?.dataSovereignty || 0,
+      item.dimensionScores?.directedIntelligence || 0
+    ].map(escapeCSV);
   });
 
-  return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+  return [headers.map(escapeCSV).join(','), ...rows.map(row => row.join(','))].join('\n');
 }
 
 module.exports = {
