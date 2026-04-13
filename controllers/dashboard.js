@@ -146,20 +146,30 @@ function generateCSV(data) {
     'Directed Intelligence'
   ];
 
-  const rows = data.map(item => [
-    item.country,
-    item.respondentName,
-    item.title,
-    item.ministry,
-    item.score,
-    item.tier,
-    new Date(item.date).toISOString().split('T')[0],
-    item.dimensionScores.computeCapacity,
-    item.dimensionScores.capitalFormation,
-    item.dimensionScores.regulatoryReadiness,
-    item.dimensionScores.dataSovereignty,
-    item.dimensionScores.directedIntelligence
-  ]);
+  const rows = data.map(item => {
+    let dateStr = 'N/A';
+    if (item.date) {
+      try {
+        dateStr = new Date(item.date).toISOString().split('T')[0];
+      } catch (e) {
+        dateStr = 'Invalid Date';
+      }
+    }
+    return [
+      item.country,
+      item.respondentName,
+      item.title,
+      item.ministry,
+      item.score,
+      item.tier,
+      dateStr,
+      item.dimensionScores.computeCapacity,
+      item.dimensionScores.capitalFormation,
+      item.dimensionScores.regulatoryReadiness,
+      item.dimensionScores.dataSovereignty,
+      item.dimensionScores.directedIntelligence
+    ];
+  });
 
   return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
 }
