@@ -34,11 +34,14 @@ fastify.addContentTypeParser('text/plain', { parseAs: 'string' }, function (req,
 
 fastify.register(postgres, {
   connectionString: process.env.DATABASE_URL || `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false
-  } : false,
+  ssl: process.env.NODE_ENV === 'production' 
+    ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' }
+    : false,
   afterConnect: async (client) => {
     await client.query('SET search_path TO sapi,public');
+  },
+  error: (err, client) => {
+    console.error('Database connection error:', err);
   }
 });
 

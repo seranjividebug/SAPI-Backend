@@ -2,15 +2,27 @@ const nodemailer = require('nodemailer');
 
 // Create SMTP transporter
 function createTransporter() {
-  return nodemailer.createTransport({
+  const options = {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
+    port: parseInt(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
+    },
+    tls: {
+      rejectUnauthorized: process.env.NODE_ENV === 'production' ? process.env.SMTP_SSL_REJECT_UNAUTHORIZED !== 'false' : false
     }
+  };
+
+  console.log('[Email] Creating transporter with config:', {
+    host: options.host,
+    port: options.port,
+    secure: options.secure,
+    tls: options.tls
   });
+
+  return nodemailer.createTransport(options);
 }
 
 // Send registration email with credentials

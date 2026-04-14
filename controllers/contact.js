@@ -2,10 +2,13 @@ const { v4: uuidv4 } = require('uuid');
 
 async function submitContactRequest(request, reply) {
   try {
+    request.log.info('[Contact] Submit request received');
     const { name, email, organization, role, area_of_interest, message } = request.body || {};
 
+    request.log.info('[Contact] Validating request data');
     // Validation
     if (!name || !email || !message) {
+      request.log.warn('[Contact] Validation failed: Missing required fields');
       reply.code(400);
       return {
         success: false,
@@ -16,6 +19,7 @@ async function submitContactRequest(request, reply) {
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      request.log.warn('[Contact] Validation failed: Invalid email format');
       reply.code(400);
       return {
         success: false,
@@ -23,19 +27,22 @@ async function submitContactRequest(request, reply) {
       };
     }
 
+    request.log.info('[Contact] Connecting to database');
     const client = await request.server.pg.connect();
-    
+
     try {
+      request.log.info('[Contact] Inserting contact request');
       // Insert contact request
       const requestId = uuidv4();
       const result = await client.query(
-        `INSERT INTO sapi.contact_requests (id, name, email, organization, role, area_of_interest, message) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7) 
+        `INSERT INTO sapi.contact_requests (id, name, email, organization, role, area_of_interest, message)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id, name, email, organization, role, area_of_interest, message, created_at`,
         [requestId, name, email, organization, role, area_of_interest, message]
       );
 
       const contactRequest = result.rows[0];
+      request.log.info('[Contact] Contact request inserted successfully', { requestId });
 
       // Format created_at as UK time
       const date = new Date(contactRequest.created_at);
@@ -53,6 +60,7 @@ async function submitContactRequest(request, reply) {
       const getPart = (type) => parts.find(p => p.type === type)?.value;
       const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
 
+      request.log.info('[Contact] Request completed successfully');
       return {
         success: true,
         message: 'Contact request submitted successfully',
@@ -67,15 +75,24 @@ async function submitContactRequest(request, reply) {
           created_at: createdAtUK
         }
       };
+    } catch (dbError) {
+      request.log.error('[Contact] Database error:', { error: dbError.message, stack: dbError.stack });
+      reply.code(500);
+      return {
+        success: false,
+        error: 'Database error occurred',
+        details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+      };
     } finally {
       client.release();
     }
   } catch (error) {
-    request.log.error(error);
+    request.log.error('[Contact] Unexpected error:', { error: error.message, stack: error.stack });
     reply.code(500);
     return {
       success: false,
-      error: error.message
+      error: 'An unexpected error occurred',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     };
   }
 }
