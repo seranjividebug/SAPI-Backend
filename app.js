@@ -20,7 +20,7 @@ fastify.addContentTypeParser('text/plain', { parseAs: 'string' }, function (req,
 });
 
 fastify.register(postgres, {
-  connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+  connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?sslmode=require&connect_timeout=10`,
   ssl: {
     rejectUnauthorized: false
   },
@@ -37,6 +37,7 @@ fastify.register(require('./routes/assessment'), { prefix: '/api/assessment' });
 fastify.register(require('./routes/roadmap'), { prefix: '/api/roadmap' });
 fastify.register(require('./routes/dashboard'), { prefix: '/api/dashboard' });
 fastify.register(require('./routes/pdf'), { prefix: '/api/pdf' });
+fastify.register(require('./routes/country'));
 
 // Health check endpoint
 fastify.get('/health', async () => {

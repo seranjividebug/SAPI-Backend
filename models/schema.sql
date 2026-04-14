@@ -28,7 +28,17 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Questions Table
+-- 3. Countries Table
+CREATE TABLE IF NOT EXISTS countries (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    code VARCHAR(3) NOT NULL UNIQUE,
+    flag_emoji VARCHAR(10) NOT NULL,
+    description VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Questions Table
 CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
     dimension INTEGER NOT NULL,
