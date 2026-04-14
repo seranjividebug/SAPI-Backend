@@ -44,6 +44,7 @@ fastify.register(require('./routes/roadmap'), { prefix: '/api/roadmap' });
 fastify.register(require('./routes/dashboard'), { prefix: '/api/dashboard' });
 fastify.register(require('./routes/pdf'), { prefix: '/api/pdf' });
 fastify.register(require('./routes/country'));
+fastify.register(require('./routes/contact'), { prefix: '/api/contact' });
 
 // Health check endpoint
 fastify.get('/health', async () => {

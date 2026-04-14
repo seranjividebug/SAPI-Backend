@@ -63,6 +63,12 @@ npm run dev
 ### Roadmap
 - `POST /api/roadmap/generate` - Generate improvement roadmap
 
+### Contact (Start the Conversation)
+- `POST /api/contact/submit` - Submit contact request form (public)
+  - Request body: `{ name, email, organization, role, area_of_interest, message }`
+  - Required fields: `name`, `email`, `message`
+- `GET /api/contact/` - Get all contact requests (admin only, requires authentication)
+
 ## SAPI Score Formula
 
 SAPI Score = D1^0.175 × D2^0.225 × D3^0.175 × D4^0.125 × D5^0.275

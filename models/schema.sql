@@ -89,6 +89,18 @@ CREATE TABLE IF NOT EXISTS results (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 8. Contact Requests Table (Start the Conversation form)
+CREATE TABLE IF NOT EXISTS contact_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    organization VARCHAR(255),
+    role VARCHAR(255),
+    area_of_interest VARCHAR(100),
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
@@ -98,6 +110,7 @@ CREATE INDEX IF NOT EXISTS idx_answers_assessment_id ON answers(assessment_id);
 CREATE INDEX IF NOT EXISTS idx_answers_question_id ON answers(question_id);
 CREATE INDEX IF NOT EXISTS idx_results_assessment_id ON results(assessment_id);
 CREATE INDEX IF NOT EXISTS idx_questions_dimension ON questions(dimension);
+CREATE INDEX IF NOT EXISTS idx_contact_requests_email ON contact_requests(email);
 
 -- Trigger to update updated_at on assessments
 CREATE OR REPLACE FUNCTION update_updated_at_column()
