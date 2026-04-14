@@ -23,7 +23,30 @@ async function sendRegistrationEmail(email, fullName, password, role) {
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
-      subject: 'Welcome to SAPI - Your Account Credentials',
+      subject: 'Your SAPI Account Credentials',
+      headers: {
+        'X-Priority': '3',
+        'X-MSMail-Priority': 'Normal',
+        'X-Mailer': 'SAPI Backend',
+        'List-Unsubscribe': `<mailto:${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      },
+      text: `
+Hello ${fullName},
+
+Your account has been successfully created as a ${roleName}.
+
+Login Credentials:
+Email: ${email}
+Password: ${password}
+
+Please keep your credentials secure and do not share them with anyone.
+
+Login here: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/login
+
+If you did not request this account, please ignore this email.
+
+© ${new Date().getFullYear()} SAPI. All rights reserved.
+      `,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background-color: #4a90e2; color: white; padding: 20px; text-align: center;">
