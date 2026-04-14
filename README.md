@@ -53,6 +53,20 @@ npm run dev
 ### Health Check
 - `GET /health` - Server health status
 
+### Authentication
+- `POST /api/auth/register` - Register a new user
+  - Request body: `{ full_name, email, role }`
+  - Required fields: `full_name`, `email`
+  - Optional: `role` (1 = admin, 2 = user, defaults to 2)
+  - Password is auto-generated as "Sapi@123" and returned in response
+- `POST /api/auth/login` - Login with email and password
+  - Request body: `{ email, password }`
+- `GET /api/auth/me` - Get current authenticated user (requires token)
+- `GET /api/auth/users` - Get all users (admin only, requires token)
+- `GET /api/auth/users/:id` - Get user by ID (admin only, requires token)
+- `PUT /api/auth/users/:id` - Update user (admin only, requires token)
+- `DELETE /api/auth/users/:id` - Delete user (admin only, requires token)
+
 ### Questions
 - `GET /api/questions` - Get all 30 questions grouped by dimension
 

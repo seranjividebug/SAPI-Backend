@@ -12,14 +12,14 @@ const ROLES = {
   USER: 2
 };
 
-// Generate admin password - fixed value for Admin and SuperAdmin
-function generateAdminPassword() {
-  return 'Admin@123';
+// Generate password - fixed value for all users
+function generatePassword() {
+  return 'Sapi@123';
 }
 
 async function register(request, reply) {
   try {
-    const { full_name, email, password, confirm_password, role } = request.body || {};
+    const { full_name, email, role } = request.body || {};
 
     // Validation
     if (!full_name || !email) {
@@ -42,40 +42,9 @@ async function register(request, reply) {
 
     // Determine role (default to USER if not specified)
     const userRole = role && parseInt(role) === ROLES.ADMIN ? ROLES.ADMIN : ROLES.USER;
-    
-    let finalPassword;
-    
-    // For Admin/SuperAdmin (role 1): auto-generate password
-    if (userRole === ROLES.ADMIN) {
-      finalPassword = generateAdminPassword();
-    } else {
-      // For regular users: require password from request
-      if (!password || !confirm_password) {
-        reply.code(400);
-        return {
-          success: false,
-          error: 'Password and confirm_password are required for user registration'
-        };
-      }
 
-      if (password !== confirm_password) {
-        reply.code(400);
-        return {
-          success: false,
-          error: 'Passwords do not match'
-        };
-      }
-
-      if (password.length < 6) {
-        reply.code(400);
-        return {
-          success: false,
-          error: 'Password must be at least 6 characters long'
-        };
-      }
-      
-      finalPassword = password;
-    }
+    // Auto-generate password for all users
+    const finalPassword = generatePassword();
 
     const client = await request.server.pg.connect();
     
@@ -147,14 +116,10 @@ async function register(request, reply) {
             role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
             created_at: createdAtUK
           },
-          token
+          token,
+          generated_password: finalPassword
         }
       };
-
-      // For admin registration, include the generated password in response
-      if (userRole === ROLES.ADMIN) {
-        response.data.generated_password = finalPassword;
-      }
 
       return response;
     } finally {
