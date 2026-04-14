@@ -28,7 +28,8 @@ fastify.addContentTypeParser('text/plain', { parseAs: 'string' }, function (req,
 fastify.register(postgres, {
   connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?sslmode=require&connect_timeout=10`,
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
+    checkServerIdentity: () => undefined
   },
   afterConnect: async (client) => {
     await client.query('SET search_path TO sapi,public');
