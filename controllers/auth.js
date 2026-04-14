@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const { sendRegistrationEmail } = require('../services/email');
 
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -12,9 +13,25 @@ const ROLES = {
   USER: 2
 };
 
-// Generate password - fixed value for all users
+// Generate professional random password
 function generatePassword() {
-  return 'Sapi@123';
+  const length = 16;
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let password = '';
+  
+  // Ensure at least one of each required character type
+  password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)];
+  password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)];
+  password += '0123456789'[Math.floor(Math.random() * 10)];
+  password += '!@#$%^&*'[Math.floor(Math.random() * 8)];
+  
+  // Fill remaining length with random characters
+  for (let i = password.length; i < length; i++) {
+    password += charset[Math.floor(Math.random() * charset.length)];
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('');
 }
 
 async function register(request, reply) {
@@ -77,6 +94,9 @@ async function register(request, reply) {
 
       const user = result.rows[0];
 
+      // Send registration email with credentials
+      const emailResult = await sendRegistrationEmail(email.toLowerCase(), full_name, finalPassword, userRole);
+
       // Format created_at as UK time
       const date = new Date(user.created_at);
       const ukFormatter = new Intl.DateTimeFormat('en-GB', {
@@ -117,7 +137,9 @@ async function register(request, reply) {
             created_at: createdAtUK
           },
           token,
-          generated_password: finalPassword
+          generated_password: finalPassword,
+          email_sent: emailResult.success,
+          email_message: emailResult.success ? 'Registration email sent successfully' : `Failed to send email: ${emailResult.error || 'Unknown error'}`
         }
       };
 

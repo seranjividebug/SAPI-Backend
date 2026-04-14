@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Users Table (Authentication)
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS sapi.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- 2. User Profiles Table (Organization/Institution Details)
-CREATE TABLE IF NOT EXISTS user_profiles (
+CREATE TABLE IF NOT EXISTS sapi.user_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     country VARCHAR(100) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 );
 
 -- 3. Countries Table
-CREATE TABLE IF NOT EXISTS countries (
+CREATE TABLE IF NOT EXISTS sapi.countries (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     code VARCHAR(3) NOT NULL UNIQUE,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS countries (
 );
 
 -- 4. Questions Table
-CREATE TABLE IF NOT EXISTS questions (
+CREATE TABLE IF NOT EXISTS sapi.questions (
     id SERIAL PRIMARY KEY,
     dimension INTEGER NOT NULL,
     dimension_name VARCHAR(100) NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS questions (
 );
 
 -- 5. Assessments Table (linked to User Profile)
-CREATE TABLE IF NOT EXISTS assessments (
+CREATE TABLE IF NOT EXISTS sapi.assessments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_profile_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS assessments (
 );
 
 -- 6. Answers Table
-CREATE TABLE IF NOT EXISTS answers (
+CREATE TABLE IF NOT EXISTS sapi.answers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
     question_id INTEGER NOT NULL REFERENCES questions(id),
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS answers (
 );
 
 -- 7. Results Table
-CREATE TABLE IF NOT EXISTS results (
+CREATE TABLE IF NOT EXISTS sapi.results (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     assessment_id UUID NOT NULL UNIQUE REFERENCES assessments(id) ON DELETE CASCADE,
     compute_capacity DECIMAL(5,2) NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS results (
 );
 
 -- 8. Contact Requests Table (Start the Conversation form)
-CREATE TABLE IF NOT EXISTS contact_requests (
+CREATE TABLE IF NOT EXISTS sapi.contact_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
