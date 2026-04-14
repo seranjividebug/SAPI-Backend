@@ -189,9 +189,10 @@ async function getAssessmentsList(pg, filters = {}) {
     const paginatedParams = [...params, limit, offset];
 
     const assessmentsQuery = await client.query(`
-      SELECT 
+      SELECT
         a.id as assessment_id,
         up.country,
+        c.flag_emoji,
         up.respondent_name,
         up.title,
         up.ministry_or_department,
@@ -207,6 +208,7 @@ async function getAssessmentsList(pg, filters = {}) {
       FROM sapi.assessments a
       JOIN sapi.user_profiles up ON a.user_profile_id = up.id
       JOIN sapi.results r ON a.id = r.assessment_id
+      LEFT JOIN sapi.countries c ON up.country = c.name
       ${whereClause}
       ORDER BY a.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -237,6 +239,7 @@ async function getAssessmentsList(pg, filters = {}) {
         return {
           id: row.assessment_id,
           country: row.country,
+          countryFlag: row.flag_emoji,
           respondentName: row.respondent_name,
           title: row.title,
           ministry: row.ministry_or_department,

@@ -8,9 +8,9 @@ async function processAssessment(pg, answers, profileId) {
   try {
     await client.query('BEGIN');
     
-    // Verify profile exists
+    // Verify profile exists and get user_id
     const profileCheck = await client.query(
-      'SELECT id FROM sapi.user_profiles WHERE id = $1',
+      'SELECT id, user_id FROM sapi.user_profiles WHERE id = $1',
       [profileId]
     );
     
@@ -112,6 +112,7 @@ async function processAssessment(pg, answers, profileId) {
     
     return {
       assessment_id: assessmentId,
+      user_id: profileCheck.rows[0].user_id,
       profile_id: profileId,
       created_at: createdAtUK,
       compute_capacity: dimensionScores[1],
@@ -137,7 +138,7 @@ async function getResults(pg, assessmentId) {
   try {
     // Get main results with profile info
     const result = await client.query(
-      `SELECT 
+      `SELECT
         r.compute_capacity,
         r.capital_formation,
         r.regulatory_readiness,
@@ -147,6 +148,7 @@ async function getResults(pg, assessmentId) {
         r.sapi_tier as tier,
         a.created_at,
         a.user_profile_id,
+        up.user_id,
         up.country,
         up.respondent_name,
         up.title,
@@ -203,6 +205,7 @@ async function getResults(pg, assessmentId) {
     
     return {
       ...results,
+      user_id: results.user_id,
       dimension_sub_indicators: Object.values(dimensionBreakdown)
     };
   } finally {
@@ -216,7 +219,7 @@ async function getAssessmentDetails(pg, assessmentId) {
   try {
     // Get assessment results with profile info
     const assessmentResult = await client.query(
-      `SELECT 
+      `SELECT
         a.id as assessment_id,
         a.created_at,
         r.compute_capacity,
@@ -226,6 +229,7 @@ async function getAssessmentDetails(pg, assessmentId) {
         r.directed_intelligence,
         r.sapi_score,
         r.sapi_tier,
+        up.user_id,
         up.country,
         up.respondent_name,
         up.title,
@@ -318,6 +322,7 @@ async function getAssessmentDetails(pg, assessmentId) {
     return {
       assessment_id: assessment.assessment_id,
       created_at: createdAtUK,
+      user_id: assessment.user_id,
       country: assessment.country,
       respondent_name: assessment.respondent_name,
       title: assessment.title,

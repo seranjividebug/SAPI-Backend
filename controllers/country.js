@@ -1,5 +1,7 @@
 async function getCountries(request, reply) {
   try {
+    reply.header('Content-Type', 'application/json; charset=utf-8');
+
     const result = await request.server.pg.query(
       'SELECT id, name, code, flag_emoji, description FROM sapi.countries ORDER BY name ASC'
     );
@@ -20,6 +22,8 @@ async function getCountries(request, reply) {
 
 async function getCountryByCode(request, reply) {
   try {
+    reply.header('Content-Type', 'application/json; charset=utf-8');
+
     const { code } = request.params;
 
     const result = await request.server.pg.query(

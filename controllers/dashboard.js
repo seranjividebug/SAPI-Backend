@@ -101,7 +101,7 @@ async function exportAssessments(request, reply) {
 
     if (format === 'csv') {
       const csv = generateCSV(result.data);
-      reply.header('Content-Type', 'text/csv');
+      reply.header('Content-Type', 'text/csv; charset=utf-8');
       reply.header('Content-Disposition', 'attachment; filename="assessments.csv"');
       return csv;
     } else if (format === 'pdf') {
@@ -134,6 +134,7 @@ function generateCSV(data) {
   const headers = [
     'Assessment ID',
     'Country',
+    'Country Flag',
     'Respondent Name',
     'Title',
     'Ministry/Department',
@@ -171,6 +172,7 @@ function generateCSV(data) {
     return [
       item.id || '',
       item.country || '',
+      item.countryFlag || '',
       item.respondentName || '',
       item.title || '',
       item.ministry || '',
@@ -186,7 +188,7 @@ function generateCSV(data) {
     ].map(escapeCSV);
   });
 
-  return [headers.map(escapeCSV).join(','), ...rows.map(row => row.join(','))].join('\n');
+  return '\uFEFF' + [headers.map(escapeCSV).join(','), ...rows.map(row => row.join(','))].join('\n');
 }
 
 module.exports = {

@@ -9,6 +9,12 @@ fastify.register(cors, {
   credentials: true
 });
 
+// Set default content type to UTF-8
+fastify.addHook('onSend', async (request, reply, payload) => {
+  reply.header('Content-Type', 'application/json; charset=utf-8');
+  return payload;
+});
+
 // Parse text/plain as JSON (for Postman/other clients sending wrong content-type)
 fastify.addContentTypeParser('text/plain', { parseAs: 'string' }, function (req, body, done) {
   try {
