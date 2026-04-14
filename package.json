@@ -10,7 +10,6 @@
   "dependencies": {
     "@fastify/cors": "^8.4.0",
     "@fastify/postgres": "^5.2.0",
-    "@sendgrid/mail": "^8.1.6",
     "bcrypt": "^6.0.0",
     "chart.js": "^4.5.1",
     "chartjs-node-canvas": "^5.0.0",
