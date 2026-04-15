@@ -1,7 +1,7 @@
 -- Seed data for SAPI Tier 1 assessment questions
 -- Insert all 30 questions with their scoring
 
-INSERT INTO questions (id, dimension, dimension_name, question_text, option_a, option_b, option_c, option_d, option_e, score_a, score_b, score_c, score_d, score_e) VALUES
+INSERT INTO sapi.questions (id, dimension, dimension_name, question_text, option_a, option_b, option_c, option_d, option_e, score_a, score_b, score_c, score_d, score_e) VALUES
 -- DIMENSION 1: Compute Capacity (Questions 1-5)
 (1, 1, 'Compute Capacity', 'What is your organisation''s primary AI compute infrastructure?', 'We use public cloud (AWS, Azure, GCP) for all AI workloads', 'We use a mix of public cloud and on-premise GPU/TPU hardware', 'We operate dedicated on-premise AI compute (GPU clusters, HPC)', 'We operate sovereign/air-gapped compute for classified or regulated workloads', 'We have no dedicated AI compute infrastructure', 25, 50, 75, 95, 5),
 (2, 1, 'Compute Capacity', 'What percentage of your AI workloads run on infrastructure located within your nation''s borders?', '0–20%', '21–50%', '51–80%', '81–100%', null, 15, 40, 70, 95, null),
