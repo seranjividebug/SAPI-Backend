@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
+const { sendContactNotificationEmail } = require('../services/email');
 
 async function submitContactRequest(request, reply) {
   try {
@@ -44,6 +45,10 @@ async function submitContactRequest(request, reply) {
       const contactRequest = result.rows[0];
       request.log.info('[Contact] Contact request inserted successfully', { requestId });
 
+      // Send email notification
+      request.log.info('[Contact] Sending email notification');
+      const emailResult = await sendContactNotificationEmail(name, email, organization, role, area_of_interest, message);
+
       // Format created_at as UK time
       const date = new Date(contactRequest.created_at);
       const ukFormatter = new Intl.DateTimeFormat('en-GB', {
@@ -72,7 +77,9 @@ async function submitContactRequest(request, reply) {
           role: contactRequest.role,
           area_of_interest: contactRequest.area_of_interest,
           message: contactRequest.message,
-          created_at: createdAtUK
+          created_at: createdAtUK,
+          email_sent: emailResult.success,
+          email_message: emailResult.success ? 'Notification email sent successfully' : `Failed to send notification email: ${emailResult.error || 'Unknown error'}`
         }
       };
     } catch (dbError) {

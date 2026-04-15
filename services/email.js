@@ -61,41 +61,42 @@ If you did not request this account, please ignore this email.
       `,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #4a90e2; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0;">Welcome to SAPI</h1>
-            <p style="margin: 5px 0 0 0;">Sovereign AI Power Index</p>
+          <div style="background-color: #1a1a4a; color: white; padding: 20px; text-align: center;">
+            <img src="https://thesovereignaipowerindex.org/logo.png" alt="SAPI Logo" style="max-width: 150px; margin-bottom: 15px;">
+            <h1 style="margin: 0; color: #d4af37;">Welcome to SAPI</h1>
+            <p style="margin: 5px 0 0 0; color: #ffffff;">Sovereign AI Power Index</p>
           </div>
           
-          <div style="padding: 20px; background-color: #f9f9f9; margin: 20px 0;">
-            <h2 style="color: #333; margin-top: 0;">Hello ${fullName},</h2>
-            <p style="color: #666; line-height: 1.6;">
-              Your account has been successfully created as a <strong>${roleName}</strong>. 
+          <div style="padding: 20px; background-color: #1a1a4a;">
+            <h2 style="color: #d4af37; margin-top: 0;">Hello ${fullName},</h2>
+            <p style="color: #e0e0e0; line-height: 1.6;">
+              Your account has been successfully created as a <strong style="color: #d4af37;">${roleName}</strong>. 
               Below are your login credentials:
             </p>
             
-            <div style="background-color: white; padding: 15px; border-left: 4px solid #4a90e2; margin: 20px 0;">
-              <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
-              <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+            <div style="background-color: #0a0a2a; padding: 15px; border-left: 4px solid #d4af37; margin: 20px 0;">
+              <p style="margin: 5px 0; color: #ffffff;"><strong>Email:</strong> ${email}</p>
+              <p style="margin: 5px 0; color: #ffffff;"><strong>Password:</strong> ${password}</p>
             </div>
             
-            <p style="color: #666; line-height: 1.6;">
+            <p style="color: #e0e0e0; line-height: 1.6;">
               Please keep your credentials secure and do not share them with anyone.
             </p>
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" 
-                 style="background-color: #4a90e2; color: white; padding: 12px 30px; 
-                        text-decoration: none; border-radius: 5px; display: inline-block;">
+                 style="background-color: #d4af37; color: #1a1a1a; padding: 12px 30px; 
+                        text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
                 Login to Your Account
               </a>
             </div>
             
-            <p style="color: #999; font-size: 12px; margin-top: 30px;">
+            <p style="color: #999999; font-size: 12px; margin-top: 30px;">
               If you did not request this account, please ignore this email.
             </p>
           </div>
           
-          <div style="text-align: center; color: #999; font-size: 12px; padding: 20px;">
+          <div style="text-align: center; color: #999999; font-size: 12px; padding: 20px; background-color: #1a1a4a;">
             <p>&copy; ${new Date().getFullYear()} SAPI. All rights reserved.</p>
           </div>
         </div>
@@ -111,6 +112,81 @@ If you did not request this account, please ignore this email.
   }
 }
 
+// Send contact notification email
+async function sendContactNotificationEmail(name, email, organization, role, area_of_interest, message) {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: ['malinisaran199@gmail.com', 'azam@coreintel.io'],
+      subject: `New Request Introduction`,
+      text: `
+New Contact Request Received
+
+Name: ${name}
+Email: ${email}
+Organization: ${organization || 'Not specified'}
+Role: ${role || 'Not specified'}
+Area of Interest: ${area_of_interest || 'Not specified'}
+
+Message:
+${message}
+
+Received at: ${new Date().toISOString()}
+      `,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background-color: #1a1a4a; color: white; padding: 20px; text-align: center;">
+            <img src="https://thesovereignaipowerindex.org/logo.png" alt="SAPI Logo" style="max-width: 150px; margin-bottom: 15px;">
+            <h1 style="margin: 0; color: #d4af37;">New Contact Request</h1>
+          </div>
+          
+          <div style="padding: 20px; background-color: #1a1a4a;">
+            <h2 style="color: #d4af37; margin-top: 0;">From: ${name}</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Email:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Organization:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${organization || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Role:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${role || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Area of Interest:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${area_of_interest || 'Not specified'}</td>
+              </tr>
+            </table>
+            
+            <h3 style="color: #d4af37; margin-top: 20px;">Message:</h3>
+            <p style="color: #e0e0e0; line-height: 1.6; background-color: #0a0a2a; padding: 15px; border-left: 4px solid #d4af37;">
+              ${message}
+            </p>
+            
+            <p style="color: #999999; font-size: 12px; margin-top: 20px;">
+              Received at: ${new Date().toLocaleString()}
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    console.log('[Email] Sending contact notification to malinisaran199@gmail.com');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[Email] Contact notification sent successfully:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[Email] Failed to send contact notification:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
-  sendRegistrationEmail
+  sendRegistrationEmail,
+  sendContactNotificationEmail
 };
