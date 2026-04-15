@@ -15,12 +15,7 @@ function createTransporter() {
     }
   };
 
-  console.log('[Email] Creating transporter with config:', {
-    host: options.host,
-    port: options.port,
-    secure: options.secure,
-    tls: options.tls
-  });
+
 
   return nodemailer.createTransport(options);
 }
@@ -104,7 +99,6 @@ If you did not request this account, please ignore this email.
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Registration email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Error sending registration email:', error);
@@ -176,9 +170,7 @@ Received at: ${new Date().toISOString()}
       `
     };
 
-    console.log('[Email] Sending contact notification to malinisaran199@gmail.com');
     const info = await transporter.sendMail(mailOptions);
-    console.log('[Email] Contact notification sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('[Email] Failed to send contact notification:', error.message);
