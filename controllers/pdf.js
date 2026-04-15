@@ -66,7 +66,7 @@ const logoSize = 52;
 
 // Globe logo circle
 try {
-  doc.image('assets/sapi-logo.png', margin, headerY, { width: logoSize, height: logoSize });
+  doc.image('assets/SAPI_Logo_B4_Print_HiRes.png', margin, headerY, { width: logoSize, height: logoSize });
 } catch (e) {
   // Fallback globe: outer circle + inner lines
   const globeCenterX = margin + 26;
