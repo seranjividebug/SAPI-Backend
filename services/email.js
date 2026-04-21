@@ -57,7 +57,6 @@ If you did not request this account, please ignore this email.
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background-color: #1a1a4a; color: white; padding: 20px; text-align: center;">
-            <img src="https://thesovereignaipowerindex.org/logo.png" alt="SAPI Logo" style="max-width: 150px; margin-bottom: 15px;">
             <h1 style="margin: 0; color: #d4af37;">Welcome to SAPI</h1>
             <p style="margin: 5px 0 0 0; color: #ffffff;">Sovereign AI Power Index</p>
           </div>
@@ -106,6 +105,161 @@ If you did not request this account, please ignore this email.
   }
 }
 
+// Send Credential Request email
+async function sendCredentialRequestEmail(fullName, officialTitle, entity, country, email, intendedUse, briefContext) {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      // to: 'azam@coreintel.io',
+      to: 'malinisaran199@gmail.com',
+      // cc: ['malinisaran199@gmail.com', 'premr@sightspectrum.com'],
+      subject: `Credential Request from ${fullName}`,
+      text: `
+Credential Request Received
+
+Full Name: ${fullName}
+Official Title: ${officialTitle}
+Government Entity or Ministry: ${entity || 'Not specified'}
+Country: ${country || 'Not specified'}
+Official Email: ${email}
+Intended Use: ${intendedUse || 'Not specified'}
+
+Brief Context:
+${briefContext || 'No additional context provided'}
+
+Received at: ${new Date().toISOString()}
+      `,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background-color: #1a1a4a; color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; color: #d4af37;">Credential Request</h1>
+            <p style="margin: 5px 0 0 0; color: #ffffff;">Sovereign AI Power Index</p>
+          </div>
+
+          <div style="padding: 20px; background-color: #1a1a4a;">
+            <h2 style="color: #d4af37; margin-top: 0;">Request Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Full Name:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${fullName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Official Title:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${officialTitle || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Government Entity or Ministry:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${entity || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Country:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${country || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Official Email:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Intended Use:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${intendedUse || 'Not specified'}</td>
+              </tr>
+            </table>
+
+            <h3 style="color: #d4af37; margin-top: 20px;">Brief Context:</h3>
+            <p style="color: #e0e0e0; line-height: 1.6; background-color: #0a0a2a; padding: 15px; border-left: 4px solid #d4af37;">
+              ${briefContext || 'No additional context provided'}
+            </p>
+
+            <p style="color: #999999; font-size: 12px; margin-top: 20px;">
+              Received at: ${new Date().toLocaleString()}
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[Email] Failed to send credential request email:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+// Send Request Briefed Index email
+async function sendBriefedIndexRequestEmail(name, email, institution, behalfOf, additionalContext) {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: 'azam@coreintel.io',
+      cc: ['malinisaran199@gmail.com', 'premr@sightspectrum.com'],
+      subject: `Request from ${name}`,
+      text: `
+Request Received
+
+Full Name: ${name}
+Official Email: ${email}
+Institution: ${institution || 'Not specified'}
+Requesting On Behalf Of: ${behalfOf || 'Not specified'}
+
+Additional Context:
+${additionalContext || 'No additional context provided'}
+
+Received at: ${new Date().toISOString()}
+      `,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background-color: #1a1a4a; color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; color: #d4af37;">You Have a New Request</h1>
+            <p style="margin: 5px 0 0 0; color: #ffffff;">Sovereign AI Power Index</p>
+          </div>
+          
+          <div style="padding: 20px; background-color: #1a1a4a;">
+            <h2 style="color: #d4af37; margin-top: 0;">Request Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Full Name:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Official Email:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Institution:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${institution || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Requesting On Behalf Of:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${behalfOf || 'Not specified'}</td>
+              </tr>
+            </table>
+            
+            <h3 style="color: #d4af37; margin-top: 20px;">Additional Context:</h3>
+            <p style="color: #e0e0e0; line-height: 1.6; background-color: #0a0a2a; padding: 15px; border-left: 4px solid #d4af37;">
+              ${additionalContext || 'No additional context provided'}
+            </p>
+            
+            <p style="color: #999999; font-size: 12px; margin-top: 20px;">
+              Received at: ${new Date().toLocaleString()}
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[Email] Failed to send briefed index request email:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 // Send contact notification email
 async function sendContactNotificationEmail(name, email, organization, role, area_of_interest, message) {
   try {
@@ -132,7 +286,6 @@ Received at: ${new Date().toISOString()}
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background-color: #1a1a4a; color: white; padding: 20px; text-align: center;">
-            <img src="https://thesovereignaipowerindex.org/logo.png" alt="SAPI Logo" style="max-width: 150px; margin-bottom: 15px;">
             <h1 style="margin: 0; color: #d4af37;">New Contact Request</h1>
           </div>
           
@@ -180,5 +333,7 @@ Received at: ${new Date().toISOString()}
 
 module.exports = {
   sendRegistrationEmail,
+  sendCredentialRequestEmail,
+  sendBriefedIndexRequestEmail,
   sendContactNotificationEmail
 };

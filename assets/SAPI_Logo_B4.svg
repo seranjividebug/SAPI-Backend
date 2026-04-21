@@ -1,0 +1,43 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+<circle fill="none" stroke="#ffffff" stroke-width="0.85" cx="400" cy="255" r="110"/>
+<ellipse fill="none" stroke="#ffffff" stroke-width="0.45" cx="400" cy="195" rx="55" ry="9.5"/>
+<ellipse fill="none" stroke="#ffffff" stroke-width="0.45" cx="400" cy="225" rx="95" ry="16.5"/>
+<ellipse fill="none" stroke="#ffffff" stroke-width="0.55" cx="400" cy="255" rx="110" ry="20"/>
+<ellipse fill="none" stroke="#ffffff" stroke-width="0.45" cx="400" cy="285" rx="95" ry="16.5"/>
+<ellipse fill="none" stroke="#ffffff" stroke-width="0.45" cx="400" cy="315" rx="55" ry="9.5"/>
+<path fill="none" stroke="#ffffff" stroke-width="0.45" d="M400,145 Q365,255 400,365"/>
+<path fill="none" stroke="#ffffff" stroke-width="0.45" d="M400,145 Q330,255 400,365"/>
+<path fill="none" stroke="#ffffff" stroke-width="0.45" d="M400,145 Q308,255 400,365"/>
+<line x1="400" y1="145" x2="400" y2="365" stroke="#ffffff" stroke-width="0.85"/>
+<clipPath id="rightHemi"><path d="M400,145 A110,110 0 0 1 400,365 Z"/></clipPath>
+<g clip-path="url(#rightHemi)">
+  <circle fill="none" stroke="#ffffff" stroke-width="0.6" cx="400" cy="255" r="52"/>
+  <circle fill="none" stroke="#ffffff" stroke-width="0.4" cx="400" cy="255" r="98"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.6" x1="400" y1="157" x2="400" y2="203"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.6" x1="400" y1="307" x2="400" y2="353"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.5" x1="400" y1="203" x2="400" y2="307"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.55" x1="442" y1="173" x2="423" y2="209"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.55" x1="476" y1="211" x2="452" y2="233"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.6" x1="510" y1="255" x2="452" y2="255"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.55" x1="476" y1="299" x2="452" y2="277"/>
+  <line fill="none" stroke="#ffffff" stroke-width="0.55" x1="442" y1="337" x2="423" y2="301"/>
+</g>
+<circle fill="#ffffff" cx="400" cy="255" r="4.5"/>
+<circle fill="#ffffff" cx="400" cy="203" r="2.8"/>
+<circle fill="#ffffff" cx="400" cy="307" r="2.8"/>
+<circle fill="#ffffff" cx="400" cy="157" r="2.2"/>
+<circle fill="#ffffff" cx="400" cy="353" r="2.2"/>
+<circle fill="#ffffff" cx="452" cy="233" r="2.5"/>
+<circle fill="#ffffff" cx="452" cy="277" r="2.5"/>
+<circle fill="#ffffff" cx="452" cy="255" r="2.8"/>
+<circle fill="#ffffff" cx="423" cy="209" r="2.2"/>
+<circle fill="#ffffff" cx="423" cy="301" r="2.2"/>
+<circle fill="#ffffff" cx="476" cy="211" r="2.0"/>
+<circle fill="#ffffff" cx="476" cy="299" r="2.0"/>
+<circle fill="#ffffff" cx="510" cy="255" r="2.0"/>
+<circle fill="#ffffff" cx="442" cy="173" r="1.8"/>
+<circle fill="#ffffff" cx="442" cy="337" r="1.8"/>
+<line x1="200" y1="422" x2="600" y2="422" stroke="#ffffff" stroke-width="0.35" opacity="0.5"/>
+<text font-family="Garamond, EB Garamond, Times New Roman, Georgia, serif" font-size="15.5" font-weight="400" fill="#ffffff" letter-spacing="5" text-anchor="middle" dominant-baseline="central" x="400" y="450">THE  SOVEREIGN  AI  POWER  INDEX</text>
+<line x1="200" y1="476" x2="600" y2="476" stroke="#ffffff" stroke-width="0.35" opacity="0.5"/>
+</svg>
