@@ -5,6 +5,10 @@ async function routes(fastify, options) {
   fastify.post('/register', auth.register);
   fastify.post('/login', auth.login);
 
+  // Passwordless / QR login (one-time email code)
+  fastify.post('/qr-login/send-code', auth.sendLoginOtp);
+  fastify.post('/qr-login/verify', auth.verifyLoginOtp);
+
   // Protected routes - require user (role 2 or admin)
   fastify.get('/me', {
     preHandler: [auth.verifyToken, auth.requireUser]

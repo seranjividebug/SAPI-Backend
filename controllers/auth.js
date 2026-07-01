@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { sendRegistrationEmail } = require('../services/email');
+const { sendRegistrationEmail, sendOtpEmail } = require('../services/email');
 
 const SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -12,6 +12,19 @@ const ROLES = {
   ADMIN: 1,       // Admin and Super Admin both use role 1
   USER: 2
 };
+
+// ---- One-time login codes (QR / passwordless login) ----
+// In-memory store keyed by lowercased email: { code, expiresAt, attempts }.
+// Codes are short-lived (10 min) so an in-memory map is sufficient for a
+// single-instance server. Swap for a DB/Redis table if running multiple nodes.
+const otpStore = new Map();
+const OTP_TTL_MS = 10 * 60 * 1000;   // 10 minutes
+const OTP_MAX_ATTEMPTS = 5;
+
+function generateOtp() {
+  // 6-digit numeric code, zero-padded
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
 // Generate professional random password
 function generatePassword() {
@@ -58,7 +71,10 @@ async function register(request, reply) {
     }
 
     // Determine role (default to USER if not specified)
-    const userRole = role && parseInt(role) === ROLES.ADMIN ? ROLES.ADMIN : ROLES.USER;
+    // --- Original: honoured an incoming role=1 to create an admin ---
+    // const userRole = role && parseInt(role) === ROLES.ADMIN ? ROLES.ADMIN : ROLES.USER;
+    // As of now: always create new accounts as a regular USER.
+    const userRole = ROLES.USER;
 
     // Auto-generate password for all users
     const finalPassword = generatePassword();
@@ -641,6 +657,189 @@ async function deleteUser(request, reply) {
   }
 }
 
+// Send a one-time login code to a registered user's email (passwordless / QR login)
+async function sendLoginOtp(request, reply) {
+  try {
+    const { email } = request.body || {};
+
+    if (!email) {
+      reply.code(400);
+      return { success: false, error: 'Email is required' };
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      reply.code(400);
+      return { success: false, error: 'Invalid email format' };
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const client = await request.server.pg.connect();
+
+    try {
+      // Portal access is restricted to verified officials, so only send a code
+      // to emails that already have an account.
+      // --- Registered-only gate (disabled): a code is now sent to any valid
+      //     email; uncomment to restrict codes to existing accounts. ---
+      // const result = await client.query(
+      //   'SELECT id FROM sapi.users WHERE email = $1',
+      //   [normalizedEmail]
+      // );
+      //
+      // if (result.rows.length === 0) {
+      //   reply.code(404);
+      //   return {
+      //     success: false,
+      //     error: 'No portal account is registered for this email. Please request credentials first.'
+      //   };
+      // }
+
+      // Generate and store the code
+      const code = generateOtp();
+      otpStore.set(normalizedEmail, {
+        code,
+        expiresAt: Date.now() + OTP_TTL_MS,
+        attempts: 0
+      });
+
+      const emailResult = await sendOtpEmail(normalizedEmail, code);
+
+      if (!emailResult.success) {
+        otpStore.delete(normalizedEmail);
+        reply.code(502);
+        return {
+          success: false,
+          error: `Failed to send verification code: ${emailResult.error || 'Unknown error'}`
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Verification code sent'
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return { success: false, error: error.message };
+  }
+}
+
+// Verify a one-time login code and issue a JWT (same session shape as login)
+async function verifyLoginOtp(request, reply) {
+  try {
+    const { email, code } = request.body || {};
+
+    if (!email || !code) {
+      reply.code(400);
+      return { success: false, error: 'Email and code are required' };
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const entry = otpStore.get(normalizedEmail);
+
+    if (!entry) {
+      reply.code(400);
+      return { success: false, error: 'No verification code found. Please request a new code.' };
+    }
+
+    if (Date.now() > entry.expiresAt) {
+      otpStore.delete(normalizedEmail);
+      reply.code(400);
+      return { success: false, error: 'Verification code has expired. Please request a new code.' };
+    }
+
+    if (entry.attempts >= OTP_MAX_ATTEMPTS) {
+      otpStore.delete(normalizedEmail);
+      reply.code(429);
+      return { success: false, error: 'Too many incorrect attempts. Please request a new code.' };
+    }
+
+    if (String(code).trim() !== entry.code) {
+      entry.attempts += 1;
+      const remaining = OTP_MAX_ATTEMPTS - entry.attempts;
+      reply.code(401);
+      return {
+        success: false,
+        error: `Incorrect code.${remaining > 0 ? ` ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.` : ' Please request a new code.'}`
+      };
+    }
+
+    // Code is valid — consume it and issue a token for the user.
+    otpStore.delete(normalizedEmail);
+
+    const client = await request.server.pg.connect();
+    try {
+      const result = await client.query(
+        `SELECT id, full_name, email, role, created_at
+         FROM sapi.users
+         WHERE email = $1`,
+        [normalizedEmail]
+      );
+
+      let user;
+      if (result.rows.length === 0) {
+        // --- Original: rejected any email without an existing account ---
+        // reply.code(404);
+        // return { success: false, error: 'Account no longer exists.' };
+        // As of now: auto-create a regular USER account on first QR login.
+        const userId = uuidv4();
+        const passwordHash = await bcrypt.hash(generatePassword(), SALT_ROUNDS);
+        const derivedName = normalizedEmail.split('@')[0];
+        const insertResult = await client.query(
+          `INSERT INTO sapi.users (id, full_name, email, password_hash, role)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id, full_name, email, role, created_at`,
+          [userId, derivedName, normalizedEmail, passwordHash, ROLES.USER]
+        );
+        user = insertResult.rows[0];
+      } else {
+        user = result.rows[0];
+      }
+
+      // Format created_at as UK time (consistent with login/register)
+      const ukFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      });
+      const parts = ukFormatter.formatToParts(new Date(user.created_at));
+      const getPart = (type) => parts.find(p => p.type === type)?.value;
+      const createdAtUK = `${getPart('day')}/${getPart('month')}/${getPart('year')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
+
+      const token = jwt.sign(
+        { user_id: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+      );
+
+      return {
+        success: true,
+        message: 'Verification successful',
+        data: {
+          user: {
+            id: user.id,
+            full_name: user.full_name,
+            email: user.email,
+            role: user.role,
+            role_name: user.role === ROLES.ADMIN ? 'admin' : 'user',
+            created_at: createdAtUK
+          },
+          token
+        }
+      };
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    request.log.error(error);
+    reply.code(500);
+    return { success: false, error: error.message };
+  }
+}
+
 // Middleware to verify JWT token
 async function verifyToken(request, reply) {
   try {
@@ -702,6 +901,8 @@ module.exports = {
   getCurrentUser,
   updateUser,
   deleteUser,
+  sendLoginOtp,
+  verifyLoginOtp,
   verifyToken,
   requireAdmin,
   requireUser,

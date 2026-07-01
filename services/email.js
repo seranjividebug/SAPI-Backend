@@ -331,9 +331,81 @@ Received at: ${new Date().toISOString()}
   }
 }
 
+// Send one-time login verification code (QR / passwordless login)
+async function sendOtpEmail(email, code) {
+  try {
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: email,
+      subject: 'Your SAPI Verification Code',
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'X-Mailer': 'SAPI Backend',
+        'List-Unsubscribe': `<mailto:${process.env.SMTP_FROM || process.env.SMTP_USER}>`
+      },
+      text: `
+Your SAPI verification code is: ${code}
+
+Enter this code to access the Sovereign AI Power Index assessment portal.
+This code will expire in 10 minutes. Do not share it with anyone.
+
+If you did not request this code, please ignore this email.
+
+© ${new Date().getFullYear()} SAPI. All rights reserved.
+      `,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background-color: #1a1a4a; color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; color: #d4af37;">SAPI Verification</h1>
+            <p style="margin: 5px 0 0 0; color: #ffffff;">Sovereign AI Power Index</p>
+          </div>
+
+          <div style="padding: 20px; background-color: #1a1a4a;">
+            <p style="color: #e0e0e0; line-height: 1.6;">
+              Use the following one-time code to verify your identity and access the assessment portal.
+              No password is required.
+            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="display: inline-block; background-color: #0a0a2a; border: 1px solid #d4af37;
+                          border-radius: 6px; padding: 18px 32px; color: #edd98a;
+                          font-size: 34px; letter-spacing: 10px; font-weight: bold;">
+                ${code}
+              </div>
+            </div>
+
+            <p style="color: #e0e0e0; line-height: 1.6;">
+              This code will expire in <strong style="color: #d4af37;">10 minutes</strong>.
+              Please do not share it with anyone.
+            </p>
+
+            <p style="color: #999999; font-size: 12px; margin-top: 30px;">
+              If you did not request this code, you can safely ignore this email.
+            </p>
+          </div>
+
+          <div style="text-align: center; color: #999999; font-size: 12px; padding: 20px; background-color: #1a1a4a;">
+            <p>&copy; ${new Date().getFullYear()} SAPI. All rights reserved.</p>
+          </div>
+        </div>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[Email] Failed to send OTP email:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
   sendRegistrationEmail,
   sendCredentialRequestEmail,
   sendBriefedIndexRequestEmail,
-  sendContactNotificationEmail
+  sendContactNotificationEmail,
+  sendOtpEmail
 };
