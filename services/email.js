@@ -261,7 +261,7 @@ Received at: ${new Date().toISOString()}
 }
 
 // Send contact notification email
-async function sendContactNotificationEmail(name, email, organization, role, area_of_interest, message) {
+async function sendContactNotificationEmail(name, email, organization, role, area_of_interest, country, timescale, message) {
   try {
     const transporter = createTransporter();
 
@@ -277,6 +277,8 @@ Email: ${email}
 Organization: ${organization || 'Not specified'}
 Role: ${role || 'Not specified'}
 Area of Interest: ${area_of_interest || 'Not specified'}
+Country or Region: ${country || 'Not specified'}
+Needed By: ${timescale || 'Not specified'}
 
 Message:
 ${message}
@@ -307,6 +309,14 @@ Received at: ${new Date().toISOString()}
               <tr>
                 <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Area of Interest:</strong></td>
                 <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${area_of_interest || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Country or Region:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${country || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #d4af37;"><strong>Needed By:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: #ffffff;">${timescale || 'Not specified'}</td>
               </tr>
             </table>
             

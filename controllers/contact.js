@@ -4,7 +4,7 @@ const { sendContactNotificationEmail, sendBriefedIndexRequestEmail, sendCredenti
 async function submitContactRequest(request, reply) {
   try {
     request.log.info('[Contact] Submit request received');
-    const { name, email, organization, role, area_of_interest, message } = request.body || {};
+    const { name, email, organization, role, area_of_interest, country, timescale, message } = request.body || {};
 
     request.log.info('[Contact] Validating request data');
     // Validation
@@ -36,10 +36,10 @@ async function submitContactRequest(request, reply) {
       // Insert contact request
       const requestId = uuidv4();
       const result = await client.query(
-        `INSERT INTO sapi.contact_requests (id, name, email, organization, role, area_of_interest, message)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING id, name, email, organization, role, area_of_interest, message, created_at`,
-        [requestId, name, email, organization, role, area_of_interest, message]
+        `INSERT INTO sapi.contact_requests (id, name, email, organization, role, area_of_interest, country, timescale, message)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id, name, email, organization, role, area_of_interest, country, timescale, message, created_at`,
+        [requestId, name, email, organization, role, area_of_interest, country || null, timescale || null, message]
       );
 
       const contactRequest = result.rows[0];
@@ -47,7 +47,7 @@ async function submitContactRequest(request, reply) {
 
       // Send email notification
       request.log.info('[Contact] Sending email notification');
-      const emailResult = await sendContactNotificationEmail(name, email, organization, role, area_of_interest, message);
+      const emailResult = await sendContactNotificationEmail(name, email, organization, role, area_of_interest, country, timescale, message);
 
       // Format created_at as UK time
       const date = new Date(contactRequest.created_at);
@@ -76,6 +76,8 @@ async function submitContactRequest(request, reply) {
           organization: contactRequest.organization,
           role: contactRequest.role,
           area_of_interest: contactRequest.area_of_interest,
+          country: contactRequest.country,
+          timescale: contactRequest.timescale,
           message: contactRequest.message,
           created_at: createdAtUK,
           email_sent: emailResult.success,
@@ -330,7 +332,7 @@ async function getContactRequests(request, reply) {
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
       const result = await client.query(
-        `SELECT id, name, email, organization, role, area_of_interest, message, created_at 
+        `SELECT id, name, email, organization, role, area_of_interest, country, timescale, message, created_at 
          FROM sapi.contact_requests 
          ORDER BY created_at DESC 
          LIMIT $1 OFFSET $2`,

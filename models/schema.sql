@@ -97,9 +97,15 @@ CREATE TABLE IF NOT EXISTS sapi.contact_requests (
     organization VARCHAR(255),
     role VARCHAR(255),
     area_of_interest VARCHAR(100),
+    country VARCHAR(255),
+    timescale VARCHAR(100),
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Added after initial release; brings existing databases up to date
+ALTER TABLE sapi.contact_requests ADD COLUMN IF NOT EXISTS country VARCHAR(255);
+ALTER TABLE sapi.contact_requests ADD COLUMN IF NOT EXISTS timescale VARCHAR(100);
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
